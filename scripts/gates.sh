@@ -10,7 +10,7 @@ echo "==> swiftlint"
 swiftlint lint --strict --quiet
 
 echo "==> build (release)"
-swift build -c release
+swift build -c release -Xswiftc -warnings-as-errors
 
 echo "==> tests"
 swift test

@@ -19,10 +19,14 @@ struct MenuContent: View {
         if !Permissions.isMicrophoneAuthorized {
             Button("Allow Microphone Access…") { Permissions.openMicrophoneSettings() }
         }
+        if settingsStore.settings.isCleanupEnabled && !hasClaudeKey {
+            Button("Add Claude Key for Cleanup…", action: showSettings)
+        }
         if dictation.isHotkeyActive {
             Text("Hold fn to dictate, fn + space to lock")
         }
         Divider()
+        Toggle("Clean Up with Claude", isOn: $settingsStore.settings.isCleanupEnabled)
         Toggle("Boost Mic While Recording", isOn: $settingsStore.settings.isMicBoostEnabled)
         Picker("Overlay Position", selection: $settingsStore.settings.overlayPosition) {
             ForEach(OverlayPosition.allCases, id: \.self) { position in
@@ -30,13 +34,19 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Button("Settings…") {
-            // a menu bar app isn't active, so bring the settings window to the front
-            NSApp.activate()
-            openSettings()
-        }
-        .keyboardShortcut(",")
+        Button("Settings…", action: showSettings)
+            .keyboardShortcut(",")
         Button("Quit Murmur") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    private var hasClaudeKey: Bool {
+        Keychain.read(account: AppConstants.Keychain.anthropicAccount) != nil
+    }
+
+    private func showSettings() {
+        // a menu bar app isn't active, so bring the settings window to the front
+        NSApp.activate()
+        openSettings()
     }
 }

@@ -11,24 +11,29 @@ public struct Settings: Codable, Equatable, Sendable {
     public var vocabulary: [String]
     /// Where the overlay pill sits on screen.
     public var overlayPosition: OverlayPosition
+    /// Let Claude fix misheard words and punctuation before pasting.
+    public var isCleanupEnabled: Bool
 
     public static let defaults = Self(
         isMicBoostEnabled: true,
         inputDeviceUID: nil,
         vocabulary: ["Claude", "Claude Code", "Anthropic", "Opus", "Sonnet", "Haiku", "cmux", "SwiftUI"],
-        overlayPosition: .bottomCenter
+        overlayPosition: .bottomCenter,
+        isCleanupEnabled: true
     )
 
     public init(
         isMicBoostEnabled: Bool,
         inputDeviceUID: String?,
         vocabulary: [String],
-        overlayPosition: OverlayPosition
+        overlayPosition: OverlayPosition,
+        isCleanupEnabled: Bool
     ) {
         self.isMicBoostEnabled = isMicBoostEnabled
         self.inputDeviceUID = inputDeviceUID
         self.vocabulary = vocabulary
         self.overlayPosition = overlayPosition
+        self.isCleanupEnabled = isCleanupEnabled
     }
 
     // missing keys fall back to the defaults, so adding a setting never wipes the saved ones
@@ -42,5 +47,7 @@ public struct Settings: Codable, Equatable, Sendable {
         overlayPosition =
             try container.decodeIfPresent(OverlayPosition.self, forKey: .overlayPosition)
             ?? fallback.overlayPosition
+        isCleanupEnabled =
+            try container.decodeIfPresent(Bool.self, forKey: .isCleanupEnabled) ?? fallback.isCleanupEnabled
     }
 }

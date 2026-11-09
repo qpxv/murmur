@@ -34,16 +34,23 @@ public enum DeepgramMessages {
             message.isFinal
         else { return nil }
         let transcript = message.channel?.alternatives.first?.transcript ?? ""
-        return FinalResult(transcript: transcript, isFromFinalize: message.isFromFinalize)
+        return FinalResult(
+            transcript: transcript,
+            isPause: message.isSpeechFinal,
+            isFromFinalize: message.isFromFinalize
+        )
     }
 
     public struct FinalResult: Equatable, Sendable {
         public let transcript: String
+        /// The speaker paused after this segment: a natural place to close a cleanup chunk.
+        public let isPause: Bool
         /// The answer to our Finalize message: everything said so far has now arrived.
         public let isFromFinalize: Bool
 
-        public init(transcript: String, isFromFinalize: Bool) {
+        public init(transcript: String, isPause: Bool, isFromFinalize: Bool) {
             self.transcript = transcript
+            self.isPause = isPause
             self.isFromFinalize = isFromFinalize
         }
     }
@@ -53,12 +60,14 @@ public enum DeepgramMessages {
 private struct ResultsMessage: Decodable {
     let type: String
     let isFinal: Bool
+    let isSpeechFinal: Bool
     let isFromFinalize: Bool
     let channel: ResultsChannel?
 
     private enum CodingKeys: String, CodingKey {
         case type
         case isFinal = "is_final"
+        case isSpeechFinal = "speech_final"
         case isFromFinalize = "from_finalize"
         case channel
     }
@@ -67,6 +76,7 @@ private struct ResultsMessage: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         type = try container.decode(String.self, forKey: .type)
         isFinal = try container.decodeIfPresent(Bool.self, forKey: .isFinal) ?? false
+        isSpeechFinal = try container.decodeIfPresent(Bool.self, forKey: .isSpeechFinal) ?? false
         isFromFinalize = try container.decodeIfPresent(Bool.self, forKey: .isFromFinalize) ?? false
         channel = try container.decodeIfPresent(ResultsChannel.self, forKey: .channel)
     }

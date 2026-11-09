@@ -1,9 +1,10 @@
+import AppKit
 import MurmurCore
 import MurmurServices
 import Observation
 import os
 
-/// Runs one dictation at a time: hotkey -> mic -> Deepgram -> paste or clipboard.
+/// Runs one dictation at a time: hotkey -> mic -> Deepgram -> Claude cleanup -> paste or clipboard.
 /// Owns the one `DictationState` the overlay and menu render.
 @MainActor
 @Observable
@@ -19,7 +20,7 @@ final class DictationController {
     @ObservationIgnored private let micGain = MicGain()
     @ObservationIgnored private let audio = AudioCapture()
     @ObservationIgnored private var gesture = HotkeyGesture()
-    @ObservationIgnored private var stream: DeepgramStream?
+    @ObservationIgnored private var active: ActiveDictation?
     @ObservationIgnored private var errorResetTask: Task<Void, Never>?
     @ObservationIgnored private var hotkeys: HotkeyMonitor?
     @ObservationIgnored private let logger = Logger(subsystem: Log.subsystem, category: "dictation")
@@ -100,6 +101,11 @@ final class DictationController {
         errorResetTask?.cancel()
         let settings = settingsStore.settings
         let stream = try DeepgramStream(apiKey: apiKey, vocabulary: settings.vocabulary)
+        let session = CleanupSession(
+            cleaner: makeCleaner(settings: settings),
+            vocabulary: settings.vocabulary,
+            appName: NSWorkspace.shared.frontmostApplication?.localizedName
+        )
         if settings.isMicBoostEnabled, let device = CoreAudioDevice.defaultInput() {
             micGain.boost(device: device)
         }
@@ -108,45 +114,67 @@ final class DictationController {
             Task { @MainActor in self?.record(level: level) }
         }
         Task { await stream.start() }
-        self.stream = stream
+        let forwarding = Task {
+            for await result in stream.results {
+                await session.add(result)
+            }
+        }
+        active = ActiveDictation(stream: stream, session: session, forwarding: forwarding)
         levels = Self.silentLevels
         state = state.applying(.start)
+    }
+
+    private func makeCleaner(settings: Settings) -> ClaudeCleaner? {
+        guard settings.isCleanupEnabled else { return nil }
+        guard let key = Keychain.read(account: AppConstants.Keychain.anthropicAccount), !key.isEmpty else {
+            logger.info("cleanup is on but no claude key is set, pasting raw text")
+            return nil
+        }
+        return ClaudeCleaner(apiKey: key)
     }
 
     private func stop() {
         guard state.isRecording else { return }
         state = state.applying(.stop)
         stopCapture()
-        guard let stream else {
+        guard let active else {
             state = .idle
             return
         }
-        self.stream = nil
-        Task { await deliver(from: stream) }
+        self.active = nil
+        Task { await deliver(active) }
     }
 
-    private func deliver(from stream: DeepgramStream) async {
+    private func deliver(_ dictation: ActiveDictation) async {
         do {
-            let text = try await stream.finish()
-            guard !text.isEmpty else {
-                fail(.nothingHeard)
-                return
-            }
-            if TextInserter.insert(text) == .copiedToClipboard {
-                await Notifier.post(title: UserMessages.copiedTitle, body: UserMessages.copiedBody)
-            }
-            state = .idle
+            try await dictation.stream.finish()
         } catch {
+            await dictation.session.cancel()
             fail(error)
+            return
         }
+        // every segment has reached the session once forwarding ends with the stream
+        await dictation.forwarding.value
+        let transcript = await dictation.session.finish()
+        guard !transcript.text.isEmpty else {
+            fail(.nothingHeard)
+            return
+        }
+        if TextInserter.insert(transcript.text) == .copiedToClipboard {
+            await Notifier.post(title: UserMessages.copiedTitle, body: UserMessages.copiedBody)
+        }
+        state = .idle
     }
 
     private func cancel() {
         stopCapture()
-        if let stream {
-            Task { await stream.cancel() }
+        if let active {
+            Task {
+                await active.stream.cancel()
+                await active.session.cancel()
+            }
         }
-        stream = nil
+        active = nil
         gesture.reset()
         state = state.isRecording ? state.applying(.cancel) : state
     }
@@ -174,4 +202,12 @@ final class DictationController {
         levels.removeFirst()
         levels.append(level)
     }
+}
+
+/// The pieces of the one dictation in progress, created and torn down together.
+private struct ActiveDictation {
+    let stream: DeepgramStream
+    let session: CleanupSession
+    /// Moves Deepgram's segments into the cleanup session; ends when the stream ends.
+    let forwarding: Task<Void, Never>
 }

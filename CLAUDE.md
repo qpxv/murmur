@@ -21,9 +21,13 @@ owns architecture, quality and maintenance.
 
 - **Swift 6 + SwiftUI/AppKit, macOS 26+ only.** Swift Package, no Xcode project.
 - **Speech-to-text: Deepgram streaming** (WebSocket). The Claude API takes no audio.
-- **Cleanup: `claude-opus-5-5`, effort `low`**, chunked while the user speaks, via the
-  Messages API over `URLSession` (no official Swift SDK). Paid from the Max plan's included
-  API credit. Raw text is the fallback whenever cleanup fails, so speech is never lost.
+- **Cleanup: `claude-opus-5-5`, effort `low`**, `fallbacks: "default"`, via the Messages API
+  over `URLSession` (no official Swift SDK). Paid from the Max plan's included API credit.
+  Flow: `DeepgramStream.results` -> `CleanupSession` -> `Chunker` closes chunks at pauses
+  (40+ words) or at 150 -> one `ClaudeCleaner` request per chunk, in parallel while speaking ->
+  `TranscriptAssembler` joins in order. After stop, at most `Cleanup.finishTimeout` is waited;
+  any chunk not cleaned by then (or failed/refused) is pasted raw. Speech is never lost.
+  Toggle: `Settings.isCleanupEnabled`. Timing per request is logged (`category == "cleanup"`).
 - **No third-party Swift dependencies.** Apple frameworks only.
 - API keys live in the Keychain, never in UserDefaults, files or logs.
 - Overlay pill position: any cell of a 3x3 grid (`OverlayPosition`), default bottom center.

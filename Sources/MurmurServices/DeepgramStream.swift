@@ -4,17 +4,22 @@ import os
 
 /// One live Deepgram transcription session for one dictation.
 ///
-/// Audio is queued from the audio thread with `send(_:)` and streamed in order. The transcript
-/// stays hidden until `finish()`, which flushes the last words and returns the full text.
+/// Audio is queued from the audio thread with `send(_:)` and streamed in order. Finalized
+/// segments come out of `results` as they arrive (never shown to the user, only cleaned and
+/// assembled). `finish()` flushes the last words; `results` ends right after.
 public actor DeepgramStream {
     private static let unauthorizedStatus = 401
+
+    /// Every finalized segment, in order. Ends when the stream finishes or is cancelled.
+    public nonisolated let results: AsyncStream<DeepgramMessages.FinalResult>
 
     private let socket: URLSessionWebSocketTask
     private let audio: AsyncStream<Data>
     private let audioQueue: AsyncStream<Data>.Continuation
+    private let resultsQueue: AsyncStream<DeepgramMessages.FinalResult>.Continuation
     private let logger = Logger(subsystem: Log.subsystem, category: "deepgram")
 
-    private var transcript = TranscriptBuffer()
+    private var hasHeardSpeech = false
     private var failure: DictationError?
     private var finalizeWaiter: CheckedContinuation<Void, Never>?
     private var sendTask: Task<Void, Never>?
@@ -26,6 +31,10 @@ public actor DeepgramStream {
         request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
         socket = URLSession.shared.webSocketTask(with: request)
         (audio, audioQueue) = AsyncStream.makeStream(of: Data.self, bufferingPolicy: .unbounded)
+        (results, resultsQueue) = AsyncStream.makeStream(
+            of: DeepgramMessages.FinalResult.self,
+            bufferingPolicy: .unbounded
+        )
     }
 
     public func start() {
@@ -39,9 +48,9 @@ public actor DeepgramStream {
         audioQueue.yield(pcm)
     }
 
-    /// Sends the remaining audio, waits for Deepgram to finalize it and returns the transcript.
-    /// Text that already arrived is returned even if the connection broke along the way.
-    public func finish() async throws(DictationError) -> String {
+    /// Sends the remaining audio and waits for Deepgram to finalize it. Only throws when the
+    /// connection failed before any speech arrived; text that already came through is kept.
+    public func finish() async throws(DictationError) {
         audioQueue.finish()
         await sendTask?.value
         if failure == nil {
@@ -50,8 +59,7 @@ public actor DeepgramStream {
             await sendText(DeepgramMessages.closeStream)
         }
         close()
-        if transcript.isEmpty, let failure { throw failure }
-        return transcript.text
+        if !hasHeardSpeech, let failure { throw failure }
     }
 
     public func cancel() {
@@ -62,6 +70,7 @@ public actor DeepgramStream {
     private func close() {
         socket.cancel(with: .normalClosure, reason: nil)
         receiveTask?.cancel()
+        resultsQueue.finish()
         resumeFinalizeWaiter()
     }
 
@@ -104,7 +113,10 @@ public actor DeepgramStream {
         @unknown default: return
         }
         guard let result = DeepgramMessages.finalResult(from: data) else { return }
-        transcript.append(result.transcript)
+        if !result.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            hasHeardSpeech = true
+        }
+        resultsQueue.yield(result)
         if result.isFromFinalize {
             resumeFinalizeWaiter()
         }

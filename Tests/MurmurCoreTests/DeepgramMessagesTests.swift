@@ -27,7 +27,16 @@ struct DeepgramMessagesTests {
              "channel":{"alternatives":[{"transcript":"open Claude Code","confidence":0.98}]}}
             """
         let result = DeepgramMessages.finalResult(from: Data(json.utf8))
-        #expect(result == DeepgramMessages.FinalResult(transcript: "open Claude Code", isFromFinalize: false))
+        #expect(result?.transcript == "open Claude Code")
+        #expect(result?.isPause == true)
+        #expect(result?.isFromFinalize == false)
+    }
+
+    @Test func finalWithoutSpeechFinalIsNotAPause() {
+        let json = """
+            {"type":"Results","is_final":true,"channel":{"alternatives":[{"transcript":"and then"}]}}
+            """
+        #expect(DeepgramMessages.finalResult(from: Data(json.utf8))?.isPause == false)
     }
 
     @Test func recognizesFinalizeAnswer() {
@@ -36,7 +45,7 @@ struct DeepgramMessagesTests {
              "channel":{"alternatives":[{"transcript":""}]}}
             """
         let result = DeepgramMessages.finalResult(from: Data(json.utf8))
-        #expect(result == DeepgramMessages.FinalResult(transcript: "", isFromFinalize: true))
+        #expect(result == DeepgramMessages.FinalResult(transcript: "", isPause: false, isFromFinalize: true))
     }
 
     @Test func ignoresInterimResults() {

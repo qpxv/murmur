@@ -8,7 +8,8 @@ struct SettingsTests {
             isMicBoostEnabled: false,
             inputDeviceUID: "BuiltInMicrophoneDevice",
             vocabulary: ["Murmur"],
-            overlayPosition: .topRight
+            overlayPosition: .topRight,
+            isCleanupEnabled: false
         )
         let data = try JSONEncoder().encode(settings)
         #expect(try JSONDecoder().decode(Settings.self, from: data) == settings)
@@ -20,5 +21,6 @@ struct SettingsTests {
         #expect(settings.isMicBoostEnabled == false)
         #expect(settings.vocabulary == Settings.defaults.vocabulary)
         #expect(settings.overlayPosition == Settings.defaults.overlayPosition)
+        #expect(settings.isCleanupEnabled == Settings.defaults.isCleanupEnabled)
     }
 }

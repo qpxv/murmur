@@ -28,6 +28,28 @@ public enum AppConstants {
         public static let finalizeTimeout: TimeInterval = 3
     }
 
+    public enum Cleanup {
+        public static let messagesURL = "https://api.anthropic.com/v1/messages"
+        public static let model = "claude-opus-5-5"
+        public static let apiVersion = "2026-10-21"
+        /// Enables `fallbacks: "default"`: a refused request is rerouted inside the same call.
+        public static let fallbackBeta = "server-side-fallback-2026-07-01"
+        /// Thinking can't be turned off on this model; low effort keeps it short.
+        public static let effort = "low"
+        /// Generous: thinking counts against it, and a 150-word chunk needs ~250 tokens of text.
+        public static let maxTokens = 4_096
+        /// A chunk closes at the next pause once it has this many words...
+        public static let minChunkWords = 40
+        /// ...or right away at this many, pause or not.
+        public static let maxChunkWords = 150
+        /// Words of the previous chunk sent along as read-only context.
+        public static let contextWords = 30
+        /// Per request. Chunks cleaned while you speak have time; the wait after stopping is capped below.
+        public static let requestTimeout: TimeInterval = 20
+        /// After you stop, how long to wait for cleanup before pasting raw text for unfinished chunks.
+        public static let finishTimeout: TimeInterval = 4
+    }
+
     public enum Paste {
         /// Time the target app gets to read the pasteboard before the old clipboard returns.
         public static let clipboardRestoreDelay: TimeInterval = 0.8
