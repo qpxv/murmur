@@ -28,7 +28,52 @@ public final class HistoryStore {
         save()
     }
 
-    /// Deletes every dictation, counts included.
+    /// Dictations not uploaded to the shared stats yet, as rows. Each gets its sync id here the
+    /// first time and keeps it, so a retried upload is recognised as the same dictation.
+    public func pendingSyncRows(device: String) -> [NeonSQL.Row] {
+        let pending = unsyncedRecords()
+        for record in pending where record.syncID == nil {
+            record.syncID = UUID()
+        }
+        save()
+        return pending.compactMap { record in
+            record.syncID.map { id in
+                NeonSQL.Row(
+                    id: id,
+                    device: device,
+                    date: record.date,
+                    wordCount: record.wordCount,
+                    speakingSeconds: record.speakingSeconds
+                )
+            }
+        }
+    }
+
+    public func markSynced(_ ids: Set<UUID>) {
+        for record in unsyncedRecords() {
+            if let id = record.syncID, ids.contains(id) {
+                record.isSynced = true
+            }
+        }
+        save()
+    }
+
+    /// Local dictations the shared stats don't contain yet, so Home can add them on top.
+    public func unsyncedSummaries() -> [DictationSummary] {
+        unsyncedRecords().map(\.summary)
+    }
+
+    private func unsyncedRecords() -> [DictationRecord] {
+        let descriptor = FetchDescriptor<DictationRecord>(predicate: #Predicate { !$0.isSynced })
+        do {
+            return try container.mainContext.fetch(descriptor)
+        } catch {
+            logger.error("reading unsynced dictations failed: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// Deletes every dictation on this Mac. Stats already synced to the database stay there.
     public func clear() {
         do {
             try container.mainContext.delete(model: DictationRecord.self)

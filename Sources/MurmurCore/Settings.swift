@@ -19,6 +19,8 @@ public struct Settings: Codable, Equatable, Sendable {
     public var typingWordsPerMinute: Int
     /// Keep the text of past dictations. Off still counts words and time for the dashboard.
     public var isHistoryEnabled: Bool
+    /// How this device is labelled in synced stats; empty uses the computer's name.
+    public var syncDeviceName: String
 
     public static let defaults = Self(
         isMicBoostEnabled: true,
@@ -28,7 +30,8 @@ public struct Settings: Codable, Equatable, Sendable {
         isCleanupEnabled: true,
         cleanup: .defaults,
         typingWordsPerMinute: 100,
-        isHistoryEnabled: true
+        isHistoryEnabled: true,
+        syncDeviceName: ""
     )
 
     private init(
@@ -39,7 +42,8 @@ public struct Settings: Codable, Equatable, Sendable {
         isCleanupEnabled: Bool,
         cleanup: CleanupOptions,
         typingWordsPerMinute: Int,
-        isHistoryEnabled: Bool
+        isHistoryEnabled: Bool,
+        syncDeviceName: String
     ) {
         self.isMicBoostEnabled = isMicBoostEnabled
         self.inputDeviceUID = inputDeviceUID
@@ -49,6 +53,7 @@ public struct Settings: Codable, Equatable, Sendable {
         self.cleanup = cleanup
         self.typingWordsPerMinute = typingWordsPerMinute
         self.isHistoryEnabled = isHistoryEnabled
+        self.syncDeviceName = syncDeviceName
     }
 
     // missing keys fall back to the defaults, so adding a setting never wipes the saved ones
@@ -70,6 +75,8 @@ public struct Settings: Codable, Equatable, Sendable {
             ?? fallback.typingWordsPerMinute
         isHistoryEnabled =
             try container.decodeIfPresent(Bool.self, forKey: .isHistoryEnabled) ?? fallback.isHistoryEnabled
+        syncDeviceName =
+            try container.decodeIfPresent(String.self, forKey: .syncDeviceName) ?? fallback.syncDeviceName
     }
 
     /// Adds a vocabulary term unless it's blank or already there (ignoring case).

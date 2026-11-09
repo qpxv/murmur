@@ -62,6 +62,11 @@ Written so you can hand it to Claude Code: *"set up Murmur from the README"*. St
    Keys are stored in the macOS Keychain, never in files. Click **Always Allow** when the
    Keychain asks.
 10. **Test:** hold fn in any text field and talk.
+11. **Stats across devices (optional, you):** in https://console.neon.tech create a project (or
+    reuse one), copy its connection string (`postgresql://…`) and paste it under Open Murmur… →
+    Keys & Permissions → Stats Sync → **Test Connection**. Murmur creates its table itself.
+    Only numbers are shared (time, words, seconds spoken), never what you said. Use the same
+    connection string on every device.
 
 ## Development
 

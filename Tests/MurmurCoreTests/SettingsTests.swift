@@ -14,6 +14,7 @@ struct SettingsTests {
         settings.cleanup.removesStutters = false
         settings.typingWordsPerMinute = 65
         settings.isHistoryEnabled = false
+        settings.syncDeviceName = "Mia's Mac"
         let data = try JSONEncoder().encode(settings)
         #expect(try JSONDecoder().decode(Settings.self, from: data) == settings)
     }

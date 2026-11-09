@@ -15,6 +15,10 @@ public final class DictationRecord {
     /// The app that was frontmost when the text was delivered.
     public var appName: String?
     public var wasCleaned: Bool
+    // given on first upload, never by a migration default: a shared default would give every
+    // older record the same id and the database would silently drop all but one
+    public var syncID: UUID?
+    public var isSynced: Bool = false
 
     public init(
         date: Date,

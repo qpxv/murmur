@@ -5,8 +5,11 @@ import SwiftUI
 
 /// API keys (stored in the Keychain) and the macOS permissions Murmur needs.
 struct KeysPane: View {
+    @Bindable var settingsStore: SettingsStore
+    let statsSync: StatsSyncController
     // permissions change in System Settings, not here: re-read them whenever Murmur comes back to the front
     @State private var refreshCount = 0
+    @State private var isTesting = false
 
     var body: some View {
         Form {
@@ -18,6 +21,7 @@ struct KeysPane: View {
             } footer: {
                 Text("Stored in your Mac's Keychain. Never leaves this Mac except to call that service.")
             }
+            statsSyncSection
             Section("Permissions") {
                 PermissionRow(
                     title: "Microphone",
@@ -41,6 +45,57 @@ struct KeysPane: View {
         .navigationTitle("Keys & Permissions")
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshCount += 1
+        }
+    }
+
+    private var statsSyncSection: some View {
+        Section {
+            APIKeyField(title: "Neon database URL", account: AppConstants.Keychain.neonAccount)
+            TextField(
+                "This device's name",
+                text: $settingsStore.settings.syncDeviceName,
+                prompt: Text(statsSync.deviceName)
+            )
+            HStack {
+                syncStatus
+                Spacer()
+                Button("Test Connection") {
+                    isTesting = true
+                    Task {
+                        await statsSync.testConnection()
+                        isTesting = false
+                    }
+                }
+                .disabled(isTesting)
+            }
+        } header: {
+            Text("Stats Sync")
+        } footer: {
+            Text(
+                "Combines Home's numbers across your devices. Only counts are shared "
+                    + "(time, words, seconds spoken), never what you said."
+            )
+        }
+    }
+
+    @ViewBuilder private var syncStatus: some View {
+        if isTesting {
+            ProgressView().controlSize(.small)
+        } else {
+            switch statsSync.status {
+            case .notConfigured:
+                Text("Not set up").foregroundStyle(.secondary)
+            case .synced(let date):
+                Label {
+                    Text("Connected, synced \(date, format: .dateTime.hour().minute())")
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                }
+                .foregroundStyle(.green)
+            case .failed(let failure):
+                Label(failure.message, systemImage: "exclamationmark.circle.fill")
+                    .foregroundStyle(.orange)
+            }
         }
     }
 }

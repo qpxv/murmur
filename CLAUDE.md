@@ -53,6 +53,15 @@ yet. Follow it when the user asks for the Windows version.
   written by `HistoryStore`, read in views with `@Query`. Falls back to an in-memory store if the
   file can't open (dictation must never break). `Settings.isHistoryEnabled` off keeps counts
   only, no text. Dashboard numbers come from `DictationStats` (Core, tested) in the local calendar.
+- **Stats sync (optional): the user's Neon database**, via Neon's HTTPS SQL endpoint
+  (`POST https://<host>/sql`, `Neon-Connection-String` header; format from Neon's driver source),
+  no Postgres driver. Table `murmur_dictations` (id, device, dictated_at, word_count,
+  speaking_seconds), created by the app. **Numbers only, never text.** The database URL lives only
+  in the Keychain (`neon-database-url`), never in the repo or logs. Each record gets its
+  `syncID` on first upload (never a migration default) and inserts are `on conflict do nothing`,
+  so retries can't double-count. `StatsSyncController` uploads after each dictation and at launch,
+  fetches when Home opens; no polling. Home shows all devices when synced, else this Mac only.
+  The Windows app uses the same table (see `docs/windows-plan.md`).
 
 ## Layout
 

@@ -54,6 +54,17 @@ public enum AppConstants {
         public static let finishTimeout: TimeInterval = 7
     }
 
+    public enum Sync {
+        /// Holds one row per dictation from every device: numbers only, never text.
+        public static let tableName = "murmur_dictations"
+        /// Neon's HTTPS SQL endpoint lives at this path on the database host.
+        public static let endpointPath = "/sql"
+        public static let connectionHeader = "Neon-Connection-String"
+        public static let arrayModeHeader = "Neon-Array-Mode"
+        public static let databaseSchemes: Set<String> = ["postgres", "postgresql"]
+        public static let requestTimeout: TimeInterval = 15
+    }
+
     public enum Paste {
         /// Time the target app gets to read the pasteboard before the old clipboard returns.
         public static let clipboardRestoreDelay: TimeInterval = 0.8
@@ -74,5 +85,6 @@ public enum AppConstants {
     public enum Keychain {
         public static let deepgramAccount = "deepgram-api-key"
         public static let anthropicAccount = "anthropic-api-key"
+        public static let neonAccount = "neon-database-url"
     }
 }

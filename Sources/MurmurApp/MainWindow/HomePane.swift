@@ -6,17 +6,19 @@ import SwiftUI
 /// Dashboard: totals, time saved against the user's typing speed, and the latest dictations.
 struct HomePane: View {
     @Bindable var settingsStore: SettingsStore
+    let statsSync: StatsSyncController
     @Query(sort: \DictationRecord.date, order: .reverse) private var records: [DictationRecord]
 
     var body: some View {
         let stats = DictationStats(
-            summaries: records.map(\.summary),
+            summaries: statsSync.summaries(local: records.map(\.summary)),
             typingWordsPerMinute: settingsStore.settings.typingWordsPerMinute,
             now: .now,
             calendar: .current
         )
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Window.sectionSpacing) {
+                source
                 statsGrid(stats)
                 typingSpeed
                 recent
@@ -24,6 +26,26 @@ struct HomePane: View {
             .padding(Theme.Window.contentPadding)
         }
         .navigationTitle("Home")
+        .task { await statsSync.refresh() }
+    }
+
+    // where the numbers come from, so a missing device is never a mystery
+    @ViewBuilder private var source: some View {
+        switch statsSync.status {
+        case .notConfigured:
+            Label("This Mac only", systemImage: "laptopcomputer")
+                .foregroundStyle(.secondary)
+        case .synced(let date):
+            Label {
+                Text("All devices, synced \(date, format: .dateTime.hour().minute())")
+            } icon: {
+                Image(systemName: "arrow.triangle.2.circlepath")
+            }
+            .foregroundStyle(.secondary)
+        case .failed(let failure):
+            Label("This Mac only. \(failure.message)", systemImage: "exclamationmark.icloud")
+                .foregroundStyle(.orange)
+        }
     }
 
     private func statsGrid(_ stats: DictationStats) -> some View {

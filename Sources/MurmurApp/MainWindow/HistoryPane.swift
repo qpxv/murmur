@@ -46,7 +46,7 @@ struct HistoryPane: View {
         .confirmationDialog("Delete all dictations?", isPresented: $isConfirmingClear) {
             Button("Delete All", role: .destructive) { historyStore.clear() }
         } message: {
-            Text("This also resets the numbers on Home. It can't be undone.")
+            Text("Deletes this Mac's history. Numbers already synced to other devices stay. It can't be undone.")
         }
     }
 

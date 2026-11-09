@@ -79,6 +79,11 @@ The layers point one way, `App → Services → Core`, as on the Mac, enforced b
   Otherwise the text stays on the clipboard and a tray balloon says so.
 - **Keys:** Windows Credential Manager (per user, encrypted by Windows), never in files.
 - **History:** a local JSON file in `%LOCALAPPDATA%\Murmur`. Same fields and same dashboard stats.
+- **Stats sync:** already built on the Mac (see `CLAUDE.md` → Stats sync). Windows uses the same Neon
+  table `murmur_dictations` and the same HTTPS endpoint and SQL (`Sources/MurmurCore/NeonSQL.swift`
+  is the reference; port it to Core with the same tests). Each local record gets its sync id on
+  first upload and a synced flag. "Neon database URL" goes in the Keys pane and Credential Manager;
+  the device name defaults to the PC name. Home shows all devices when synced.
 - **Main window:** opened from the tray icon. The same panes: Home, History, Vocabulary, Cleanup,
   Audio, Shortcut & Overlay, Keys.
 - **Start with Windows:** a toggle in the app (per-user Run registry key).

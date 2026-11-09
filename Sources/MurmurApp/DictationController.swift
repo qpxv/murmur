@@ -18,6 +18,7 @@ final class DictationController {
 
     @ObservationIgnored private let settingsStore: SettingsStore
     @ObservationIgnored private let historyStore: HistoryStore
+    @ObservationIgnored private let statsSync: StatsSyncController
     @ObservationIgnored private let micGain = MicGain()
     @ObservationIgnored private let audio = AudioCapture()
     @ObservationIgnored private var gesture = HotkeyGesture()
@@ -31,9 +32,10 @@ final class DictationController {
     @ObservationIgnored private var accessibilityObserver: (any NSObjectProtocol)?
     @ObservationIgnored private let logger = Logger(subsystem: Log.subsystem, category: "dictation")
 
-    init(settingsStore: SettingsStore, historyStore: HistoryStore) {
+    init(settingsStore: SettingsStore, historyStore: HistoryStore, statsSync: StatsSyncController) {
         self.settingsStore = settingsStore
         self.historyStore = historyStore
+        self.statsSync = statsSync
     }
 
     /// Called once at launch: undo a mic boost a crash left behind, ask for permissions,
@@ -203,6 +205,8 @@ final class DictationController {
             appName: NSWorkspace.shared.frontmostApplication?.localizedName,
             keepsText: settingsStore.settings.isHistoryEnabled
         )
+        // in the background: the paste already happened, sync never holds it up
+        Task { await statsSync.uploadPending() }
         if outcome == .copiedToClipboard {
             await Notifier.post(title: UserMessages.copiedTitle, body: UserMessages.copiedBody)
         }

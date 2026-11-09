@@ -11,7 +11,11 @@ struct MurmurApp: App {
             MenuContent(dictation: appDelegate.dictation, settingsStore: appDelegate.settingsStore)
         }
         Window("Murmur", id: MainWindow.id) {
-            MainWindow(settingsStore: appDelegate.settingsStore, historyStore: appDelegate.historyStore)
+            MainWindow(
+                settingsStore: appDelegate.settingsStore,
+                historyStore: appDelegate.historyStore,
+                statsSync: appDelegate.statsSync
+            )
         }
         .modelContainer(appDelegate.historyStore.container)
         // opened from the menu bar, never on its own at launch
@@ -24,15 +28,22 @@ struct MurmurApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsStore: SettingsStore
     let historyStore: HistoryStore
+    let statsSync: StatsSyncController
     let dictation: DictationController
     private var overlay: OverlayPanelController?
 
     override init() {
         let settingsStore = SettingsStore()
         let historyStore = HistoryStore()
+        let statsSync = StatsSyncController(historyStore: historyStore, settingsStore: settingsStore)
         self.settingsStore = settingsStore
         self.historyStore = historyStore
-        self.dictation = DictationController(settingsStore: settingsStore, historyStore: historyStore)
+        self.statsSync = statsSync
+        self.dictation = DictationController(
+            settingsStore: settingsStore,
+            historyStore: historyStore,
+            statsSync: statsSync
+        )
         super.init()
     }
 
@@ -40,6 +51,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         dictation.activate()
         overlay = OverlayPanelController(dictation: dictation, settingsStore: settingsStore)
         Task { await Notifier.requestAuthorization() }
+        // dictations made while offline go up now
+        Task { await statsSync.uploadPending() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

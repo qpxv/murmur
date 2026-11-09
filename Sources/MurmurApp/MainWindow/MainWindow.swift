@@ -9,6 +9,7 @@ struct MainWindow: View {
 
     @Bindable var settingsStore: SettingsStore
     let historyStore: HistoryStore
+    let statsSync: StatsSyncController
     @State private var selection: Pane? = .home
 
     var body: some View {
@@ -32,13 +33,13 @@ struct MainWindow: View {
 
     @ViewBuilder private func detail(for pane: Pane) -> some View {
         switch pane {
-        case .home: HomePane(settingsStore: settingsStore)
+        case .home: HomePane(settingsStore: settingsStore, statsSync: statsSync)
         case .history: HistoryPane(settingsStore: settingsStore, historyStore: historyStore)
         case .vocabulary: VocabularyPane(settingsStore: settingsStore)
         case .cleanup: CleanupPane(settingsStore: settingsStore, selection: $selection)
         case .audio: AudioPane(settingsStore: settingsStore)
         case .overlay: OverlayPane(settingsStore: settingsStore)
-        case .keys: KeysPane()
+        case .keys: KeysPane(settingsStore: settingsStore, statsSync: statsSync)
         }
     }
 }
