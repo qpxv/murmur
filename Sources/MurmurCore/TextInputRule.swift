@@ -11,4 +11,11 @@ public enum TextInputRule {
         // expose an editable value with a caret
         return isValueSettable && hasSelectedTextRange
     }
+
+    /// A paste landed when the field's length changed. Fields that don't report a length
+    /// count as landed, since there is nothing to check against.
+    public static func didPasteLand(lengthBefore: Int?, lengthAfter: Int?) -> Bool {
+        guard let lengthBefore, let lengthAfter else { return true }
+        return lengthAfter != lengthBefore
+    }
 }

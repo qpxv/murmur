@@ -19,4 +19,21 @@ struct TextInputRuleTests {
     @Test func nothingFocusedIsNotInput() {
         #expect(!TextInputRule.isTextInput(role: nil, isValueSettable: false, hasSelectedTextRange: false))
     }
+
+    @Test func pasteLandedWhenFieldGrew() {
+        #expect(TextInputRule.didPasteLand(lengthBefore: 0, lengthAfter: 42))
+    }
+
+    @Test func pasteReplacingASelectionStillCountsWhenLengthChanged() {
+        #expect(TextInputRule.didPasteLand(lengthBefore: 80, lengthAfter: 30))
+    }
+
+    @Test func unchangedFieldMeansThePasteWasDropped() {
+        #expect(!TextInputRule.didPasteLand(lengthBefore: 12, lengthAfter: 12))
+    }
+
+    @Test func fieldWithoutLengthCountsAsLanded() {
+        #expect(TextInputRule.didPasteLand(lengthBefore: nil, lengthAfter: 5))
+        #expect(TextInputRule.didPasteLand(lengthBefore: 5, lengthAfter: nil))
+    }
 }

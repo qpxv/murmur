@@ -18,7 +18,8 @@ yet. Follow it when the user asks for the Windows version.
   tied to the app that was focused at start. The overlay never takes focus.
 - On stop: if a text input is focused *at that moment*, paste into it (clipboard restored
   afterwards). Otherwise leave the text on the clipboard and post a notification saying so.
-  Text is never lost.
+  Text is never lost: after pasting, the field's character count is compared
+  (`TextInputRule.didPasteLand`); if it didn't change, the text stays on the clipboard too.
 - Chromium apps (Chrome, Electron) hide web content from accessibility until asked, so a
   focused page input reads as "no input" (system-wide focus returns -25212). When the first
   check fails, `TextInserter` sets `AXManualAccessibility` (Electron) and
