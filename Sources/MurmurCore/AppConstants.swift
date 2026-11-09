@@ -22,6 +22,9 @@ public enum AppConstants {
         public static let fullScaleDecibels: Float = -10
         /// A sample this close to full scale (1.0) counts as clipping.
         public static let clippingThreshold: Float = 0.99
+        /// UID prefix of the private aggregate device core audio creates for a process's own
+        /// AVAudioEngine; it shows up in the device list but isn't a microphone.
+        public static let privateAggregateUIDPrefix = "CADefaultDeviceAggregate"
     }
 
     public enum Deepgram {

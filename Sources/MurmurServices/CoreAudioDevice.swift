@@ -1,5 +1,6 @@
 import CoreAudio
 import Foundation
+import MurmurCore
 
 /// A microphone the user can pick.
 public struct InputDevice: Identifiable, Hashable, Sendable {
@@ -23,7 +24,9 @@ public enum CoreAudioDevice {
         var devices = [AudioDeviceID](repeating: 0, count: Int(size) / MemoryLayout<AudioDeviceID>.size)
         guard AudioObjectGetPropertyData(system, &address, 0, nil, &size, &devices) == noErr else { return [] }
         return devices.filter(hasInput).compactMap { device in
-            guard let uid = uid(of: device), let name = name(of: device) else { return nil }
+            guard let uid = uid(of: device), let name = name(of: device),
+                !uid.hasPrefix(AppConstants.Audio.privateAggregateUIDPrefix)
+            else { return nil }
             return InputDevice(uid: uid, name: name)
         }
     }
