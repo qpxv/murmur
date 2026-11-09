@@ -1,0 +1,76 @@
+# Murmur
+
+Personal macOS menu bar dictation app (a Superwhisper replacement). Speech streams to
+Deepgram, finished chunks get cleaned up by Claude while still speaking, and the result is
+pasted where the user is when they stop. The user does not read or write code here: Claude
+owns architecture, quality and maintenance.
+
+## Behaviour
+
+- **fn hold** = push to talk, release stops. **fn + space** (while fn is held) locks
+  recording; the next fn press stops it. The space is swallowed, never typed.
+- An unlocked fn press shorter than `AppConstants.Hotkey.minimumHold` is discarded, and so is
+  an unlocked recording where another key is pressed with fn (fn + arrow etc. are shortcuts).
+- While recording, the user can click around, switch apps, use Mission Control: nothing is
+  tied to the app that was focused at start. The overlay never takes focus.
+- On stop: if a text input is focused *at that moment*, paste into it (clipboard restored
+  afterwards). Otherwise leave the text on the clipboard and post a notification saying so.
+  Text is never lost.
+
+## Decisions (keep in sync, no aspirational rules)
+
+- **Swift 6 + SwiftUI/AppKit, macOS 26+ only.** Swift Package, no Xcode project.
+- **Speech-to-text: Deepgram streaming** (WebSocket). The Claude API takes no audio.
+- **Cleanup: `claude-opus-5-5`, effort `low`**, chunked while the user speaks, via the
+  Messages API over `URLSession` (no official Swift SDK). Paid from the Max plan's included
+  API credit. Raw text is the fallback whenever cleanup fails, so speech is never lost.
+- **No third-party Swift dependencies.** Apple frameworks only.
+- API keys live in the Keychain, never in UserDefaults, files or logs.
+- Overlay pill position: any cell of a 3x3 grid (`OverlayPosition`), default bottom center.
+
+## Layout
+
+```
+Sources/MurmurCore/      pure logic + wire types. Foundation/CoreGraphics only. unit-tested.
+Sources/MurmurServices/  system integrations (audio, network, keychain, paste, hotkey, storage)
+Sources/MurmurApp/       SwiftUI + AppKit glue: menu bar, overlay, settings, controller
+Tests/MurmurCoreTests/   Swift Testing
+Resources/               Info.plist (single source for name, bundle id, version), AppIcon.icns
+scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.sh
+```
+
+- Dependencies point one way: App -> Services -> Core. Enforced by SPM targets.
+- Logic that can be pure goes in Core with tests; Services/App stay thin.
+- Each service sits behind a small protocol only once a second implementation or a test
+  double actually needs it.
+
+## Single source of truth
+
+- Numbers, timings, model IDs, URLs: `MurmurCore/AppConstants.swift`.
+- Visual tokens (spacing, radii, durations): `MurmurApp/Theme.swift` (added with the overlay).
+- User settings: one `Settings` struct, persisted by `SettingsStore`. New fields decode with a
+  default (`decodeIfPresent`), so saved settings survive upgrades.
+- App name / bundle id / version: `Resources/Info.plist`; scripts read it via PlistBuddy, Swift
+  reads `Bundle.main`.
+
+## Commands
+
+- `scripts/gates.sh`: swift format lint, swiftlint --strict, release build, tests. Must be
+  green before anything counts as done.
+- `scripts/bundle.sh`: builds and signs `build/Murmur.app`. `open build/Murmur.app` to run.
+- `scripts/make-icon.sh`: regenerates `Resources/AppIcon.icns`.
+- Logs: `log stream --predicate 'subsystem == "dev.benwinzer.murmur"'`.
+
+## Toolchain
+
+- Xcode is installed and selected (`xcode-select -p`). Everything builds from the terminal via
+  SwiftPM; the Xcode app never needs to be open.
+
+## Code rules
+
+- No force unwraps/casts/tries, no magic numbers outside `AppConstants`/`Theme` (tests excepted).
+- Errors: services return or throw typed errors; the controller turns them into a
+  `DictationState.failed(message:)` shown in the overlay. Log with `os.Logger`
+  (`Log.subsystem`), never log transcripts or keys.
+- Idle = zero CPU: no timers, no polling, no animation unless recording.
+- Comments only for the why, lowercase and short.

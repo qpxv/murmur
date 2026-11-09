@@ -1,0 +1,4 @@
+# tests spell out expected values inline, so literals are fine here
+disabled_rules:
+  - no_magic_numbers
+  - force_unwrapping

@@ -1,0 +1,49 @@
+# run with --strict: every warning is an error, locally and in scripts/gates.sh
+included:
+  - Sources
+  - Tests
+  - Package.swift
+excluded:
+  - .build
+
+# formatting is owned by swift-format; these would fight it
+disabled_rules:
+  - trailing_comma
+  - opening_brace
+
+opt_in_rules:
+  - closure_spacing
+  - contains_over_first_not_nil
+  - contains_over_filter_count
+  - discouraged_optional_boolean
+  - empty_count
+  - empty_string
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - no_magic_numbers
+  - prefer_self_in_static_references
+  - redundant_type_annotation
+  - sorted_first_last
+  - toggle_bool
+  - unowned_variable_capture
+  - yoda_condition
+
+line_length:
+  warning: 120
+  ignores_comments: true
+function_body_length:
+  warning: 40
+cyclomatic_complexity:
+  warning: 10
+type_body_length:
+  warning: 250
+file_length:
+  warning: 400
+identifier_name:
+  excluded: [x, y, id, at]
+todo:
+  severity: error
