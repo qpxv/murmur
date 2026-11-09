@@ -47,5 +47,6 @@ public enum AppConstants {
 
     public enum Keychain {
         public static let deepgramAccount = "deepgram-api-key"
+        public static let anthropicAccount = "anthropic-api-key"
     }
 }

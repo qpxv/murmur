@@ -12,24 +12,25 @@ enum Theme {
         static let idleWidth: CGFloat = 46
         static let idleHeight: CGFloat = 24
         static let idleIconSize: CGFloat = 11
-        static let pillHeight: CGFloat = 36
+        static let pillHeight: CGFloat = 30
         // dynamic island look: near-solid black, a hairline edge so it still reads on dark wallpapers
         static let backgroundOpacity: Double = 0.94
-        static let edgeOpacity: Double = 0.14
+        static let edgeOpacity: Double = 0.12
         static let background = Color.black.opacity(backgroundOpacity)
         static let foreground = Color.white
         static let edge = Color.white.opacity(edgeOpacity)
-        static let edgeWidth: CGFloat = 0.5
+        // a full point: a 0.5pt hairline falls between pixels on 1x displays and partly vanishes
+        static let edgeWidth: CGFloat = 1
         static let horizontalPadding: CGFloat = 14
         static let contentSpacing: CGFloat = 8
         static let morphDuration: Double = 0.28
     }
 
     enum VoiceBar {
-        static let barWidth: CGFloat = 3
-        static let barSpacing: CGFloat = 3
-        static let minBarHeight: CGFloat = 3
-        static let maxBarHeight: CGFloat = 22
+        static let barWidth: CGFloat = 2
+        static let barSpacing: CGFloat = 2
+        static let minBarHeight: CGFloat = 2
+        static let maxBarHeight: CGFloat = 15
         static let levelAnimation: Double = 0.08
     }
 
