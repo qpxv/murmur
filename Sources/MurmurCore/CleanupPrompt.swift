@@ -42,11 +42,16 @@ public enum CleanupPrompt {
 
     private static let punctuation = """
         - Fix punctuation, capitalization and sentence boundaries. Turn stray ellipses or runs of \
-        dots left by pauses into normal punctuation.
+        dots left by pauses into normal punctuation. A pause is not a sentence end: never close a \
+        short fragment of a few words with its own period. Join it to the sentence it belongs to, \
+        with a comma or no punctuation at all. Example: "And then. We could just. Do it." becomes \
+        "And then we could just do it."
         """
 
     private static let stutters = """
-        - Remove accidental immediate repetitions and stutters ("the the", "I I think").
+        - Remove accidental immediate repetitions and stutters ("the the", "I I think"). When the \
+        speaker starts a sentence, breaks off and starts it again, keep only the completed \
+        version. Example: "So I know. So I know which this is." becomes "So I know which this is."
         """
 
     private static func style(_ style: CleanupStyle) -> String {

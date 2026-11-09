@@ -41,6 +41,7 @@ enum Theme {
         static let contentPadding: CGFloat = 24
         static let sectionSpacing: CGFloat = 24
         static let recentCount = 5
+        static let toolbarItemPadding: CGFloat = 8
         /// Lines of a dictation shown before it's cut off (Home); History shows it all.
         static let previewLines = 3
         /// "1h 23m", not "1h 23m 4s"

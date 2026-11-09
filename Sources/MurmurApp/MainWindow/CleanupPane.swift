@@ -32,10 +32,13 @@ struct CleanupPane: View {
                         isOn: $settingsStore.settings.cleanup.fixesMisheardWords
                     )
                     Toggle(
-                        "Punctuation, capitalization and stray “....”",
+                        "Punctuation, capitalization, stray “....” and broken-up fragments",
                         isOn: $settingsStore.settings.cleanup.fixesPunctuation
                     )
-                    Toggle("Stutters and repeated words", isOn: $settingsStore.settings.cleanup.removesStutters)
+                    Toggle(
+                        "Stutters, repeated words and restarted sentences",
+                        isOn: $settingsStore.settings.cleanup.removesStutters
+                    )
                 }
                 Section {
                     Picker("Style", selection: $settingsStore.settings.cleanup.style) {

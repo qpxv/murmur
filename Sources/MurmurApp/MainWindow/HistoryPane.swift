@@ -29,12 +29,19 @@ struct HistoryPane: View {
         .navigationTitle("History")
         .searchable(text: $search, prompt: "Search dictations")
         .toolbar {
-            Toggle("Save Text", isOn: $settingsStore.settings.isHistoryEnabled)
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                .help("Off: only word counts and times are kept, not what you said")
-            Button("Clear History…", systemImage: "trash") { isConfirmingClear = true }
-                .disabled(records.isEmpty)
+            // separate items with a spacer: in one group they share a single cramped capsule
+            ToolbarItem {
+                Toggle("Save Text", isOn: $settingsStore.settings.isHistoryEnabled)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .padding(.horizontal, Theme.Window.toolbarItemPadding)
+                    .help("Save what you said. Off: only word counts and times are kept")
+            }
+            ToolbarSpacer(.fixed)
+            ToolbarItem {
+                Button("Clear History…", systemImage: "trash") { isConfirmingClear = true }
+                    .disabled(records.isEmpty)
+            }
         }
         .confirmationDialog("Delete all dictations?", isPresented: $isConfirmingClear) {
             Button("Delete All", role: .destructive) { historyStore.clear() }

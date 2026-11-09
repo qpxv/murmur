@@ -12,6 +12,12 @@ struct CleanupOptionsTests {
         #expect(prompt.contains("<previous>"))
     }
 
+    @Test func punctuationJoinsFragmentsAndStuttersDropRestarts() {
+        let prompt = CleanupPrompt.system(for: .defaults)
+        #expect(prompt.contains("never close a short fragment"))
+        #expect(prompt.contains("keep only the completed version"))
+    }
+
     @Test func disabledFixesAreLeftOut() {
         var options = CleanupOptions.defaults
         options.fixesPunctuation = false
