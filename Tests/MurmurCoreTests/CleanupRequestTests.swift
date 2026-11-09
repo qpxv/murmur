@@ -7,6 +7,7 @@ struct CleanupRequestTests {
         let message = CleanupPrompt.userMessage(
             transcript: "open clock code",
             previous: "earlier words",
+            next: "later words",
             vocabulary: ["Claude Code", " ", "cmux"],
             appName: "Ghostty"
         )
@@ -18,12 +19,19 @@ struct CleanupRequestTests {
                 <transcript>
                 open clock code
                 </transcript>
+                <next>later words</next>
                 """
         )
     }
 
     @Test func userMessageLeavesOutEmptyParts() {
-        let message = CleanupPrompt.userMessage(transcript: "hi", previous: "", vocabulary: [], appName: nil)
+        let message = CleanupPrompt.userMessage(
+            transcript: "hi",
+            previous: "",
+            next: "",
+            vocabulary: [],
+            appName: nil
+        )
         #expect(message == "<transcript>\nhi\n</transcript>")
     }
 

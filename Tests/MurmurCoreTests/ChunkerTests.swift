@@ -34,6 +34,12 @@ struct ChunkerTests {
         #expect(chunker.flush() == nil)
     }
 
+    @Test func firstWordsTakesALeadingSlice() {
+        #expect(Chunker.firstWords(of: "through the text again and see", count: 3) == "through the text")
+        #expect(Chunker.firstWords(of: "short", count: 3) == "short")
+        #expect(Chunker.firstWords(of: "", count: 3).isEmpty)
+    }
+
     @Test func countsWordsAcrossAnyWhitespace() {
         #expect(Chunker.wordCount(of: " Claude  Code\nrocks ") == 3)
         #expect(Chunker.wordCount(of: "") == 0)

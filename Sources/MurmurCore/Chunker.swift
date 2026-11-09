@@ -41,4 +41,8 @@ public struct Chunker: Equatable, Sendable {
     public static func wordCount(of text: String) -> Int {
         text.split(whereSeparator: \.isWhitespace).count
     }
+
+    public static func firstWords(of text: String, count: Int) -> String {
+        text.split(whereSeparator: \.isWhitespace).prefix(count).joined(separator: " ")
+    }
 }

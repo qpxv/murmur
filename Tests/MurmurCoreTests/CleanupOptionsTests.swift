@@ -10,6 +10,7 @@ struct CleanupOptionsTests {
         #expect(prompt.contains("stutters"))
         #expect(prompt.contains("Keep everything else exactly as spoken"))
         #expect(prompt.contains("<previous>"))
+        #expect(prompt.contains("continues in <next>"))
     }
 
     @Test func punctuationJoinsFragmentsAndStuttersDropRestarts() {

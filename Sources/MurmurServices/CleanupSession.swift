@@ -2,15 +2,25 @@ import Foundation
 import MurmurCore
 
 /// Cleans one dictation chunk by chunk while the user is still talking. Segments come in from
-/// Deepgram; each closed chunk is sent to Claude right away. `finish()` closes the last chunk,
-/// waits a bounded time for the requests still in flight and assembles the result.
+/// Deepgram; a closed chunk waits until the next words arrive, then goes to Claude with both
+/// the words before and after it as context, so sentences split across chunks still read as
+/// one. `finish()` sends what's left, waits a bounded time for the requests in flight and
+/// assembles the result.
 public actor CleanupSession {
+    private struct WaitingChunk {
+        let number: Int
+        let raw: String
+        let previous: String
+    }
+
     private let cleaner: ClaudeCleaner?
     private let vocabulary: [String]
     private let appName: String?
 
     private var chunker = Chunker()
     private var assembler = TranscriptAssembler()
+    // closed, but not sent yet: waiting for the words that follow it
+    private var waiting: WaitingChunk?
     private var requests: [Task<Void, Never>] = []
     private var inFlight = 0
     private var finishWaiter: CheckedContinuation<Void, Never>?
@@ -23,14 +33,19 @@ public actor CleanupSession {
     }
 
     public func add(_ result: DeepgramMessages.FinalResult) {
+        if !result.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            sendWaiting(followedBy: result.transcript)
+        }
         guard let chunk = chunker.add(result.transcript, isPause: result.isPause) else { return }
-        startChunk(chunk)
+        hold(chunk)
     }
 
     public func finish() async -> DictationTranscript {
         if let rest = chunker.flush() {
-            startChunk(rest)
+            sendWaiting(followedBy: rest)
+            hold(rest)
         }
+        sendWaiting(followedBy: "")
         if inFlight > 0 {
             await waitForRequests()
         }
@@ -47,13 +62,20 @@ public actor CleanupSession {
         resumeFinishWaiter()
     }
 
-    private func startChunk(_ raw: String) {
+    private func hold(_ raw: String) {
         let previous = assembler.lastRawWords(AppConstants.Cleanup.contextWords)
         let number = assembler.addChunk(raw)
+        waiting = WaitingChunk(number: number, raw: raw, previous: previous)
+    }
+
+    private func sendWaiting(followedBy next: String) {
+        guard let chunk = waiting else { return }
+        waiting = nil
         guard let cleaner else { return }
         let message = CleanupPrompt.userMessage(
-            transcript: raw,
-            previous: previous,
+            transcript: chunk.raw,
+            previous: chunk.previous,
+            next: Chunker.firstWords(of: next, count: AppConstants.Cleanup.contextWords),
             vocabulary: vocabulary,
             appName: appName
         )
@@ -61,7 +83,7 @@ public actor CleanupSession {
         requests.append(
             Task {
                 let cleaned = await cleaner.clean(message)
-                chunkFinished(number, cleaned: cleaned)
+                chunkFinished(chunk.number, cleaned: cleaned)
             }
         )
     }

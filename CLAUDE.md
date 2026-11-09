@@ -24,7 +24,9 @@ owns architecture, quality and maintenance.
 - **Cleanup: `claude-opus-5-5`, effort `low`**, `fallbacks: "default"`, via the Messages API
   over `URLSession` (no official Swift SDK). Paid from the Max plan's included API credit.
   Flow: `DeepgramStream.results` -> `CleanupSession` -> `Chunker` closes chunks at pauses
-  (40+ words) or at 150 -> one `ClaudeCleaner` request per chunk, in parallel while speaking ->
+  (40+ words) or at 150 -> a closed chunk waits for the next segment, then one `ClaudeCleaner`
+  request per chunk with `<previous>` and `<next>` context (so sentences split at a chunk edge
+  still join up), in parallel while speaking ->
   `TranscriptAssembler` joins in order. After stop, at most `Cleanup.finishTimeout` is waited;
   any chunk not cleaned by then (or failed/refused) is pasted raw. Speech is never lost.
   Toggle: `Settings.isCleanupEnabled`. Timing per request is logged (`category == "cleanup"`).
