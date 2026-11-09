@@ -197,7 +197,7 @@ final class DictationController {
             fail(.nothingHeard)
             return
         }
-        let outcome = TextInserter.insert(transcript.text)
+        let outcome = await TextInserter.insert(transcript.text)
         state = .idle
         historyStore.record(
             transcript,

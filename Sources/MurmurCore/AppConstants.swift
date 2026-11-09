@@ -68,6 +68,8 @@ public enum AppConstants {
     public enum Paste {
         /// Time the target app gets to read the pasteboard before the old clipboard returns.
         public static let clipboardRestoreDelay: TimeInterval = 0.8
+        /// Time a Chromium app gets to build its accessibility tree after Murmur first asks for it.
+        public static let accessibilityWarmupDelay: TimeInterval = 0.25
     }
 
     public enum Overlay {

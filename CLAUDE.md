@@ -19,6 +19,12 @@ yet. Follow it when the user asks for the Windows version.
 - On stop: if a text input is focused *at that moment*, paste into it (clipboard restored
   afterwards). Otherwise leave the text on the clipboard and post a notification saying so.
   Text is never lost.
+- Chromium apps (Chrome, Electron) hide web content from accessibility until asked, so a
+  focused page input reads as "no input" (system-wide focus returns -25212). When the first
+  check fails, `TextInserter` sets `AXManualAccessibility` (Electron) and
+  `AXEnhancedUserInterface` (Chrome) on the front app, waits `Paste.accessibilityWarmupDelay`
+  and asks the app element for its focus. Chrome returns -25205/-25208 for these setters even
+  though they work, so the result is logged, never trusted. Chrome keeps it on until it quits.
 
 ## Decisions (keep in sync, no aspirational rules)
 
