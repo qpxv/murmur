@@ -29,6 +29,13 @@ struct MenuContent: View {
         }
         Divider()
         Toggle("Clean Up with Claude", isOn: $settingsStore.settings.isCleanupEnabled)
+        Picker("Microphone", selection: $settingsStore.settings.inputDeviceUID) {
+            Text("System Default").tag(String?.none)
+            // read here, not cached: a cheap core audio query, and a newly plugged-in mic shows up
+            ForEach(CoreAudioDevice.inputDevices()) { device in
+                Text(device.name).tag(String?.some(device.uid))
+            }
+        }
         Toggle("Boost Mic While Recording", isOn: $settingsStore.settings.isMicBoostEnabled)
         Picker("Overlay Position", selection: $settingsStore.settings.overlayPosition) {
             ForEach(OverlayPosition.allCases, id: \.self) { position in
