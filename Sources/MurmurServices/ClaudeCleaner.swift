@@ -8,10 +8,12 @@ public struct ClaudeCleaner: Sendable {
     private static let successStatus = 200
 
     private let apiKey: String
+    private let systemPrompt: String
     private let logger = Logger(subsystem: Log.subsystem, category: "cleanup")
 
-    public init(apiKey: String) {
+    public init(apiKey: String, options: CleanupOptions) {
         self.apiKey = apiKey
+        self.systemPrompt = CleanupPrompt.system(for: options)
     }
 
     public func clean(_ userMessage: String) async -> String? {
@@ -20,7 +22,7 @@ public struct ClaudeCleaner: Sendable {
         do {
             var request = URLRequest(url: url, timeoutInterval: AppConstants.Cleanup.requestTimeout)
             request.httpMethod = "POST"
-            request.httpBody = try AnthropicMessages.cleanupRequestBody(userMessage: userMessage)
+            request.httpBody = try AnthropicMessages.cleanupRequestBody(system: systemPrompt, userMessage: userMessage)
             request.setValue("application/json", forHTTPHeaderField: "content-type")
             request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
             request.setValue(AppConstants.Cleanup.apiVersion, forHTTPHeaderField: "anthropic-version")

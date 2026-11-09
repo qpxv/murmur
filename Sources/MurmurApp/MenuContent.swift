@@ -7,7 +7,7 @@ import SwiftUI
 struct MenuContent: View {
     let dictation: DictationController
     @Bindable var settingsStore: SettingsStore
-    @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         if !dictation.isHotkeyActive {
@@ -19,8 +19,10 @@ struct MenuContent: View {
         if !Permissions.isMicrophoneAuthorized {
             Button("Allow Microphone Access…") { Permissions.openMicrophoneSettings() }
         }
-        if settingsStore.settings.isCleanupEnabled && !hasClaudeKey {
-            Button("Add Claude Key for Cleanup…", action: showSettings)
+        if settingsStore.settings.isCleanupEnabled
+            && !Keychain.contains(account: AppConstants.Keychain.anthropicAccount)
+        {
+            Button("Add Claude Key for Cleanup…", action: showMainWindow)
         }
         if dictation.isHotkeyActive {
             Text("Hold fn to dictate, fn + space to lock")
@@ -34,19 +36,15 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Button("Settings…", action: showSettings)
+        Button("Open Murmur…", action: showMainWindow)
             .keyboardShortcut(",")
         Button("Quit Murmur") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }
 
-    private var hasClaudeKey: Bool {
-        Keychain.read(account: AppConstants.Keychain.anthropicAccount) != nil
-    }
-
-    private func showSettings() {
-        // a menu bar app isn't active, so bring the settings window to the front
+    private func showMainWindow() {
+        // a menu bar app isn't active, so bring the window to the front
         NSApp.activate()
-        openSettings()
+        openWindow(id: MainWindow.id)
     }
 }

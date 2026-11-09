@@ -28,9 +28,26 @@ owns architecture, quality and maintenance.
   `TranscriptAssembler` joins in order. After stop, at most `Cleanup.finishTimeout` is waited;
   any chunk not cleaned by then (or failed/refused) is pasted raw. Speech is never lost.
   Toggle: `Settings.isCleanupEnabled`. Timing per request is logged (`category == "cleanup"`).
+  `Settings.cleanup` (`CleanupOptions`): three fix toggles + style casual/normal/formal; the
+  system prompt is built from it by `CleanupPrompt.system(for:)`. Nothing to do (all fixes off,
+  normal style) means no Claude call at all.
+- **Mic selection:** only switch the engine's device when the user picked a specific mic.
+  Forcing even the default device onto `AVAudioEngine` left it silent once.
+- **Signing** (`scripts/bundle.sh`): Apple Development cert if present, else the self-signed
+  "Murmur Local Signing", else ad hoc. With the self-signed cert, Keychain re-asks after every
+  build (partition is the binary's cdhash); an Apple Development cert (team id) fixes that.
 - **No third-party Swift dependencies.** Apple frameworks only.
 - API keys live in the Keychain, never in UserDefaults, files or logs.
 - Overlay pill position: any cell of a 3x3 grid (`OverlayPosition`), default bottom center.
+  Black dynamic-island style pill; 1pt edge (0.5pt vanishes on 1x displays).
+- **App window** (`MainWindow`, a `Window` scene, suppressed at launch): sidebar panes Home
+  (stats), History, Vocabulary, Cleanup, Audio, Shortcut & Overlay, Keys & Permissions. Opened
+  from the menu bar ("Open Murmur…"). While open the app is `.regular` (Dock, ⌘-Tab), back to
+  `.accessory` when closed. There is no separate Settings window.
+- **History: SwiftData**, `DictationRecord` in Application Support/<bundle id>/history.store,
+  written by `HistoryStore`, read in views with `@Query`. Falls back to an in-memory store if the
+  file can't open (dictation must never break). `Settings.isHistoryEnabled` off keeps counts
+  only, no text. Dashboard numbers come from `DictationStats` (Core, tested) in the local calendar.
 
 ## Layout
 

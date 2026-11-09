@@ -28,13 +28,13 @@ struct CleanupRequestTests {
     }
 
     @Test func requestBodyCarriesModelEffortAndFallbacks() throws {
-        let body = try AnthropicMessages.cleanupRequestBody(userMessage: "<transcript>\nhi\n</transcript>")
+        let body = try AnthropicMessages.cleanupRequestBody(system: "be tidy", userMessage: "hi")
         let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
         #expect(json["model"] as? String == "claude-opus-5-5")
         #expect(json["fallbacks"] as? String == "default")
         #expect((json["output_config"] as? [String: String])?["effort"] == "low")
         #expect(json["max_tokens"] as? Int == AppConstants.Cleanup.maxTokens)
-        #expect(json["system"] as? String == CleanupPrompt.system)
+        #expect(json["system"] as? String == "be tidy")
         #expect(json["thinking"] == nil)
     }
 

@@ -3,11 +3,11 @@ import Foundation
 /// Claude Messages API wire format for one cleanup request and its response.
 public enum AnthropicMessages {
     /// JSON body for cleaning one chunk.
-    public static func cleanupRequestBody(userMessage: String) throws -> Data {
+    public static func cleanupRequestBody(system: String, userMessage: String) throws -> Data {
         let request = Request(
             model: AppConstants.Cleanup.model,
             maxTokens: AppConstants.Cleanup.maxTokens,
-            system: CleanupPrompt.system,
+            system: system,
             messages: [Request.Message(role: "user", content: userMessage)],
             outputConfig: Request.OutputConfig(effort: AppConstants.Cleanup.effort),
             fallbacks: "default"

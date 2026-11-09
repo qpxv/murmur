@@ -34,7 +34,42 @@ enum Theme {
         static let levelAnimation: Double = 0.08
     }
 
-    enum Settings {
-        static let windowWidth: CGFloat = 460
+    enum Window {
+        static let minWidth: CGFloat = 780
+        static let minHeight: CGFloat = 540
+        static let sidebarWidth: CGFloat = 210
+        static let contentPadding: CGFloat = 24
+        static let sectionSpacing: CGFloat = 24
+        static let recentCount = 5
+        /// Lines of a dictation shown before it's cut off (Home); History shows it all.
+        static let previewLines = 3
+        /// "1h 23m", not "1h 23m 4s"
+        static let durationUnitCount = 2
+    }
+
+    enum StatCard {
+        static let minWidth: CGFloat = 170
+        static let spacing: CGFloat = 12
+        static let padding: CGFloat = 16
+        static let cornerRadius: CGFloat = 14
+        static let valueSpacing: CGFloat = 6
+        static let backgroundOpacity: Double = 0.5
+    }
+
+    enum PositionPicker {
+        static let screenWidth: CGFloat = 300
+        static let screenHeight: CGFloat = 186
+        static let screenCornerRadius: CGFloat = 12
+        static let cellSpacing: CGFloat = 6
+        static let pillWidth: CGFloat = 46
+        static let pillHeight: CGFloat = 16
+        static let dotSize: CGFloat = 6
+        static let glyphSize: CGFloat = 8
+        static let idleOpacity: Double = 0.25
+    }
+
+    enum Typing {
+        static let speedRange = 10...250
+        static let fieldWidth: CGFloat = 56
     }
 }

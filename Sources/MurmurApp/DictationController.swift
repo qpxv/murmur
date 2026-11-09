@@ -17,16 +17,21 @@ final class DictationController {
     private static let silentLevels = [Float](repeating: 0, count: AppConstants.Overlay.voiceBarCount)
 
     @ObservationIgnored private let settingsStore: SettingsStore
+    @ObservationIgnored private let historyStore: HistoryStore
     @ObservationIgnored private let micGain = MicGain()
     @ObservationIgnored private let audio = AudioCapture()
     @ObservationIgnored private var gesture = HotkeyGesture()
     @ObservationIgnored private var active: ActiveDictation?
+    // audio blocks of the current recording, logged on stop: 0 means the mic delivered nothing
+    @ObservationIgnored private var capturedBlocks = 0
     @ObservationIgnored private var errorResetTask: Task<Void, Never>?
     @ObservationIgnored private var hotkeys: HotkeyMonitor?
+    @ObservationIgnored private var accessibilityObserver: (any NSObjectProtocol)?
     @ObservationIgnored private let logger = Logger(subsystem: Log.subsystem, category: "dictation")
 
-    init(settingsStore: SettingsStore) {
+    init(settingsStore: SettingsStore, historyStore: HistoryStore) {
         self.settingsStore = settingsStore
+        self.historyStore = historyStore
     }
 
     /// Called once at launch: undo a mic boost a crash left behind, ask for permissions,
@@ -35,16 +40,37 @@ final class DictationController {
         micGain.restorePendingFromLastRun()
         Task { _ = await Permissions.requestMicrophone() }
         enableHotkey()
+        accessibilityObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Permissions.accessibilityChangedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in await self?.retryHotkeyAfterAccessibilityChange() }
+        }
     }
 
     /// Installs the fn listener, prompting for Accessibility if it's missing.
     func enableHotkey() {
-        let monitor = hotkeys ?? HotkeyMonitor { [weak self] event in self?.handle(event) ?? false }
-        hotkeys = monitor
-        isHotkeyActive = monitor.start()
+        startHotkey()
         if !isHotkeyActive {
             Permissions.promptForAccessibility()
         }
+    }
+
+    private func startHotkey() {
+        let monitor = hotkeys ?? HotkeyMonitor { [weak self] event in self?.handle(event) ?? false }
+        hotkeys = monitor
+        isHotkeyActive = monitor.start()
+    }
+
+    // the user just flipped some app's accessibility switch; if it was ours, start listening for fn
+    // right away instead of waiting for a click in the menu
+    private func retryHotkeyAfterAccessibilityChange() async {
+        guard !isHotkeyActive else { return }
+        // the trust flag lags the notification slightly
+        try? await Task.sleep(for: .seconds(AppConstants.Hotkey.accessibilitySettleDelay))
+        guard Permissions.isAccessibilityTrusted else { return }
+        startHotkey()
     }
 
     /// Called on quit: never leave the mic boosted or a socket open.
@@ -106,10 +132,12 @@ final class DictationController {
             vocabulary: settings.vocabulary,
             appName: NSWorkspace.shared.frontmostApplication?.localizedName
         )
-        if settings.isMicBoostEnabled, let device = CoreAudioDevice.defaultInput() {
+        let chosenDevice = settings.inputDeviceUID.flatMap(CoreAudioDevice.device(withUID:))
+        if settings.isMicBoostEnabled, let device = chosenDevice ?? CoreAudioDevice.defaultInput() {
             micGain.boost(device: device)
         }
-        try audio.start { [weak self] pcm, level in
+        capturedBlocks = 0
+        try audio.start(device: chosenDevice) { [weak self] pcm, level in
             stream.send(pcm)
             Task { @MainActor in self?.record(level: level) }
         }
@@ -119,18 +147,18 @@ final class DictationController {
                 await session.add(result)
             }
         }
-        active = ActiveDictation(stream: stream, session: session, forwarding: forwarding)
+        active = ActiveDictation(stream: stream, session: session, forwarding: forwarding, startedAt: .now)
         levels = Self.silentLevels
         state = state.applying(.start)
     }
 
     private func makeCleaner(settings: Settings) -> ClaudeCleaner? {
-        guard settings.isCleanupEnabled else { return nil }
+        guard settings.isCleanupEnabled, settings.cleanup.hasWork else { return nil }
         guard let key = Keychain.read(account: AppConstants.Keychain.anthropicAccount), !key.isEmpty else {
             logger.info("cleanup is on but no claude key is set, pasting raw text")
             return nil
         }
-        return ClaudeCleaner(apiKey: key)
+        return ClaudeCleaner(apiKey: key, options: settings.cleanup)
     }
 
     private func stop() {
@@ -142,10 +170,12 @@ final class DictationController {
             return
         }
         self.active = nil
-        Task { await deliver(active) }
+        let speakingSeconds = (ContinuousClock.now - active.startedAt) / .seconds(1)
+        logger.notice("recording stopped after \(speakingSeconds) s with \(self.capturedBlocks) audio blocks")
+        Task { await deliver(active, speakingSeconds: speakingSeconds) }
     }
 
-    private func deliver(_ dictation: ActiveDictation) async {
+    private func deliver(_ dictation: ActiveDictation, speakingSeconds: Double) async {
         do {
             try await dictation.stream.finish()
         } catch {
@@ -160,10 +190,17 @@ final class DictationController {
             fail(.nothingHeard)
             return
         }
-        if TextInserter.insert(transcript.text) == .copiedToClipboard {
+        let outcome = TextInserter.insert(transcript.text)
+        state = .idle
+        historyStore.record(
+            transcript,
+            speakingSeconds: speakingSeconds,
+            appName: NSWorkspace.shared.frontmostApplication?.localizedName,
+            keepsText: settingsStore.settings.isHistoryEnabled
+        )
+        if outcome == .copiedToClipboard {
             await Notifier.post(title: UserMessages.copiedTitle, body: UserMessages.copiedBody)
         }
-        state = .idle
     }
 
     private func cancel() {
@@ -186,7 +223,8 @@ final class DictationController {
     }
 
     private func fail(_ error: DictationError) {
-        logger.error("dictation failed: \(String(describing: error))")
+        // only the error case name (e.g. nothingHeard), never text, so it's safe in the clear
+        logger.error("dictation failed: \(String(describing: error), privacy: .public)")
         cancel()
         state = .failed(error)
         errorResetTask?.cancel()
@@ -199,6 +237,7 @@ final class DictationController {
 
     private func record(level: Float) {
         guard state.isRecording else { return }
+        capturedBlocks += 1
         levels.removeFirst()
         levels.append(level)
     }
@@ -210,4 +249,5 @@ private struct ActiveDictation {
     let session: CleanupSession
     /// Moves Deepgram's segments into the cleanup session; ends when the stream ends.
     let forwarding: Task<Void, Never>
+    let startedAt: ContinuousClock.Instant
 }

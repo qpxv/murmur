@@ -13,6 +13,9 @@ public enum Permissions {
     private static let fnUsageDomain = "com.apple.HIToolbox"
     private static let fnUsageKey = "AppleFnUsageType"
 
+    /// Posted system-wide (distributed) whenever any app's Accessibility permission changes.
+    public static let accessibilityChangedNotification = Notification.Name("com.apple.accessibility.api")
+
     public static var isMicrophoneAuthorized: Bool {
         AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     }

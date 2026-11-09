@@ -6,6 +6,8 @@ public enum AppConstants {
     public enum Hotkey {
         /// An unlocked press shorter than this is treated as accidental and discarded.
         public static let minimumHold: TimeInterval = 0.3
+        /// Wait after the system's "accessibility changed" broadcast before re-checking trust.
+        public static let accessibilitySettleDelay: TimeInterval = 0.5
     }
 
     public enum Audio {

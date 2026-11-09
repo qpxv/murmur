@@ -26,6 +26,10 @@ public enum Keychain {
         return String(data: data, encoding: .utf8)
     }
 
+    public static func contains(account: String) -> Bool {
+        read(account: account) != nil
+    }
+
     /// Saves `value`, or deletes the entry when `value` is empty.
     @discardableResult
     public static func write(_ value: String, account: String) -> Bool {

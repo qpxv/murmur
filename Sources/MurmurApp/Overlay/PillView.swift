@@ -17,7 +17,11 @@ struct PillView: View {
             .overlay(Capsule().strokeBorder(Theme.Overlay.edge, lineWidth: Theme.Overlay.edgeWidth))
             .environment(\.colorScheme, .dark)
             .animation(.spring(duration: Theme.Overlay.morphDuration), value: dictation.state)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: settingsStore.settings.overlayPosition.alignment
+            )
     }
 
     @ViewBuilder private var content: some View {
@@ -47,23 +51,5 @@ struct PillView: View {
 
     private var isIdle: Bool {
         dictation.state == .idle
-    }
-
-    // the pill hugs the screen edge it's anchored to, so it grows away from the edge
-    private var alignment: Alignment {
-        let position = settingsStore.settings.overlayPosition
-        let horizontal: HorizontalAlignment =
-            switch position.horizontal {
-            case .leading: .leading
-            case .center: .center
-            case .trailing: .trailing
-            }
-        let vertical: VerticalAlignment =
-            switch position.vertical {
-            case .top: .top
-            case .middle: .center
-            case .bottom: .bottom
-            }
-        return Alignment(horizontal: horizontal, vertical: vertical)
     }
 }

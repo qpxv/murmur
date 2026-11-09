@@ -10,9 +10,12 @@ struct MurmurApp: App {
         MenuBarExtra("Murmur", systemImage: "waveform") {
             MenuContent(dictation: appDelegate.dictation, settingsStore: appDelegate.settingsStore)
         }
-        Settings {
-            SettingsView(settingsStore: appDelegate.settingsStore)
+        Window("Murmur", id: MainWindow.id) {
+            MainWindow(settingsStore: appDelegate.settingsStore, historyStore: appDelegate.historyStore)
         }
+        .modelContainer(appDelegate.historyStore.container)
+        // opened from the menu bar, never on its own at launch
+        .defaultLaunchBehavior(.suppressed)
     }
 }
 
@@ -20,13 +23,16 @@ struct MurmurApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsStore: SettingsStore
+    let historyStore: HistoryStore
     let dictation: DictationController
     private var overlay: OverlayPanelController?
 
     override init() {
         let settingsStore = SettingsStore()
+        let historyStore = HistoryStore()
         self.settingsStore = settingsStore
-        self.dictation = DictationController(settingsStore: settingsStore)
+        self.historyStore = historyStore
+        self.dictation = DictationController(settingsStore: settingsStore, historyStore: historyStore)
         super.init()
     }
 

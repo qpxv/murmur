@@ -20,6 +20,7 @@ public actor DeepgramStream {
     private let logger = Logger(subsystem: Log.subsystem, category: "deepgram")
 
     private var hasHeardSpeech = false
+    private var isClosed = false
     private var failure: DictationError?
     private var finalizeWaiter: CheckedContinuation<Void, Never>?
     private var sendTask: Task<Void, Never>?
@@ -68,6 +69,7 @@ public actor DeepgramStream {
     }
 
     private func close() {
+        isClosed = true
         socket.cancel(with: .normalClosure, reason: nil)
         receiveTask?.cancel()
         resultsQueue.finish()
@@ -138,9 +140,12 @@ public actor DeepgramStream {
     }
 
     private func fail(_ error: any Error) {
-        guard failure == nil else { return }
+        // the pending receive always errors once we close the socket ourselves; that's not a failure
+        guard failure == nil, !isClosed else { return }
         let status = (socket.response as? HTTPURLResponse)?.statusCode
         failure = status == Self.unauthorizedStatus ? .invalidDeepgramKey : .connectionFailed
-        logger.error("deepgram connection failed (status \(status ?? 0)): \(error.localizedDescription)")
+        logger.error(
+            "deepgram connection failed (status \(status ?? 0)): \(error.localizedDescription, privacy: .public)"
+        )
     }
 }

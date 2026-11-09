@@ -1,16 +1,22 @@
+import AppKit
 import MurmurCore
 import MurmurServices
 import SwiftUI
 
-/// Settings window: API keys, permissions and the overlay position.
-struct SettingsView: View {
-    @Bindable var settingsStore: SettingsStore
+/// API keys (stored in the Keychain) and the macOS permissions Murmur needs.
+struct KeysPane: View {
+    // permissions change in System Settings, not here: re-read them whenever Murmur comes back to the front
+    @State private var refreshCount = 0
 
     var body: some View {
         Form {
-            Section("API Keys") {
+            Section {
                 APIKeyField(title: "Deepgram", account: AppConstants.Keychain.deepgramAccount)
                 APIKeyField(title: "Claude", account: AppConstants.Keychain.anthropicAccount)
+            } header: {
+                Text("API Keys")
+            } footer: {
+                Text("Stored in your Mac's Keychain. Never leaves this Mac except to call that service.")
             }
             Section("Permissions") {
                 PermissionRow(
@@ -29,34 +35,12 @@ struct SettingsView: View {
                     action: Permissions.openKeyboardSettings
                 )
             }
-            Section("Overlay") {
-                Picker("Position", selection: $settingsStore.settings.overlayPosition) {
-                    ForEach(OverlayPosition.allCases, id: \.self) { position in
-                        Text(position.title).tag(position)
-                    }
-                }
-            }
+            .id(refreshCount)
         }
         .formStyle(.grouped)
-        .frame(width: Theme.Settings.windowWidth)
-        .fixedSize()
-    }
-}
-
-private struct PermissionRow: View {
-    let title: String
-    let isGranted: Bool
-    let action: @MainActor () -> Void
-
-    var body: some View {
-        HStack {
-            Image(systemName: isGranted ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                .foregroundStyle(isGranted ? .green : .orange)
-            Text(title)
-            Spacer()
-            if !isGranted {
-                Button("Open Settings…", action: action)
-            }
+        .navigationTitle("Keys & Permissions")
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshCount += 1
         }
     }
 }

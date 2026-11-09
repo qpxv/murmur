@@ -3,8 +3,8 @@ import Foundation
 import MurmurCore
 import os
 
-/// Records the default input device and delivers 16 kHz mono 16-bit PCM plus a 0...1
-/// loudness level for every block. Callbacks arrive on the audio thread.
+/// Records an input device and delivers 16 kHz mono 16-bit PCM plus a 0...1 loudness level
+/// for every block. Callbacks arrive on the audio thread.
 @MainActor
 public final class AudioCapture {
     public typealias ChunkHandler = @Sendable (_ pcm: Data, _ level: Float) -> Void
@@ -14,9 +14,20 @@ public final class AudioCapture {
 
     public init() {}
 
-    public func start(onChunk: @escaping ChunkHandler) throws(DictationError) {
+    /// `device` is a specific microphone the user picked; `nil` leaves the engine on the system
+    /// default. Only switch when really needed: forcing even the default device onto the engine
+    /// can leave it with a stale format and no audio.
+    public func start(device: AudioDeviceID?, onChunk: @escaping ChunkHandler) throws(DictationError) {
         let engine = AVAudioEngine()
         let input = engine.inputNode
+        if let device, device != CoreAudioDevice.defaultInput() {
+            do {
+                // must happen before reading the format, which depends on the device
+                try input.auAudioUnit.setDeviceID(device)
+            } catch {
+                logger.error("couldn't switch to the chosen mic, using default: \(error.localizedDescription)")
+            }
+        }
         let hardwareFormat = input.outputFormat(forBus: 0)
         guard hardwareFormat.sampleRate > 0,
             let targetFormat = AVAudioFormat(
