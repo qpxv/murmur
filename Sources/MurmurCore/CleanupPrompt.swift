@@ -46,9 +46,11 @@ public enum CleanupPrompt {
         short words for similar-sounding ones in a way that breaks the meaning: when a word \
         clearly doesn't fit, or contradicts what is said right after it, use the word the \
         speaker obviously meant. Example: "this is not funny, this is not cool, this is really \
-        cool" is "this is so funny, this is so cool, this is really cool". Likewise turn a short \
-        phrase that makes no sense where it stands into what was evidently said. Only correct \
-        what the context makes clear; when in doubt, leave the words as they are.
+        cool" is "this is so funny, this is so cool, this is really cool". A sentence can be \
+        grammatical and still impossible: "my Mac is an app I built myself" can't be meant (a \
+        computer isn't an app), so it is "my Mac has an app I built myself". Likewise turn a \
+        short phrase that makes no sense where it stands into what was evidently said. Only \
+        correct what the context makes clear; when in doubt, leave the words as they are.
         """
 
     private static let punctuation = """

@@ -7,6 +7,7 @@ struct CleanupOptionsTests {
         let prompt = CleanupPrompt.system(for: .defaults)
         #expect(prompt.contains("misheard"))
         #expect(prompt.contains("contradicts what is said right after"))
+        #expect(prompt.contains("grammatical and still impossible"))
         #expect(prompt.contains("when in doubt, leave the words"))
         #expect(prompt.contains("punctuation"))
         #expect(prompt.contains("stutters"))
