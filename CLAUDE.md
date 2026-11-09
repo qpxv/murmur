@@ -5,6 +5,9 @@ Deepgram, finished chunks get cleaned up by Claude while still speaking, and the
 pasted where the user is when they stop. The user does not read or write code here: Claude
 owns architecture, quality and maintenance.
 
+**Windows version:** approved plan in [`docs/windows-plan.md`](docs/windows-plan.md), not started
+yet. Follow it when the user asks for the Windows version.
+
 ## Behaviour
 
 - **fn hold** = push to talk, release stops. **fn + space** (while fn is held) locks
