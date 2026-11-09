@@ -56,7 +56,7 @@ owns architecture, quality and maintenance.
 ```
 Sources/MurmurCore/      pure logic + wire types. Foundation/CoreGraphics only. unit-tested.
 Sources/MurmurServices/  system integrations (audio, network, keychain, paste, hotkey, storage)
-Sources/MurmurApp/       SwiftUI + AppKit glue: menu bar, overlay, settings, controller
+Sources/MurmurApp/       SwiftUI + AppKit glue: menu bar, overlay, main window, controller
 Tests/MurmurCoreTests/   Swift Testing
 Resources/               Info.plist (single source for name, bundle id, version), AppIcon.icns
 scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.sh
@@ -82,7 +82,12 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
   green before anything counts as done.
 - `scripts/bundle.sh`: builds and signs `build/Murmur.app`. `open build/Murmur.app` to run.
 - `scripts/make-icon.sh`: regenerates `Resources/AppIcon.icns`.
-- Logs: `log stream --predicate 'subsystem == "dev.benwinzer.murmur"'`.
+- Logs: `/usr/bin/log show --last 10m --predicate 'subsystem == "dev.benwinzer.murmur"'` (the
+  full path: in zsh `log` is a builtin). Each recording logs its audio block and clipped count.
+- History DB (raw vs cleaned text, for checking cleanup quality): `sqlite3 ~/Library/Application\
+  Support/dev.benwinzer.murmur/history.store "SELECT ZRAWTEXT, ZTEXT FROM ZDICTATIONRECORD ORDER BY
+  ZDATE DESC LIMIT 1"`. Only read it when the user asks you to look at a dictation.
+- New Mac setup: follow `README.md` → "Set up on a new Mac".
 
 ## Toolchain
 
@@ -93,7 +98,7 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
 
 - No force unwraps/casts/tries, no magic numbers outside `AppConstants`/`Theme` (tests excepted).
 - Errors: services return or throw typed errors; the controller turns them into a
-  `DictationState.failed(message:)` shown in the overlay. Log with `os.Logger`
+  `DictationState.failed(DictationError)` whose `message` the overlay shows. Log with `os.Logger`
   (`Log.subsystem`), never log transcripts or keys.
 - Idle = zero CPU: no timers, no polling, no animation unless recording.
 - Comments only for the why, lowercase and short.
