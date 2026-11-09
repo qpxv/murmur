@@ -67,26 +67,22 @@ public enum TextInserter {
         if let input = focusedTextInput(in: AXUIElementCreateSystemWide()) { return input }
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
         let element = AXUIElementCreateApplication(app.processIdentifier)
-        enableAccessibility(of: element, appID: app.bundleIdentifier ?? "unknown")
+        enableAccessibility(of: element)
         // chromium reports an error for both switches even when they take effect, so always look again
         try? await Task.sleep(for: .seconds(AppConstants.Paste.accessibilityWarmupDelay))
         return focusedTextInput(in: element)
     }
 
     /// electron knows AXManualAccessibility, chrome AXEnhancedUserInterface (what voiceover sets)
-    private static func enableAccessibility(of app: AXUIElement, appID: String) {
-        let manual = AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
-        let enhanced = AXUIElementSetAttributeValue(app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
-        logger.info(
-            "accessibility on in \(appID, privacy: .public): manual \(manual.rawValue), enhanced \(enhanced.rawValue)"
-        )
+    private static func enableAccessibility(of app: AXUIElement) {
+        AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+        AXUIElementSetAttributeValue(app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
     }
 
     private static func focusedTextInput(in source: AXUIElement) -> AXUIElement? {
         var focused: CFTypeRef?
         let status = AXUIElementCopyAttributeValue(source, kAXFocusedUIElementAttribute as CFString, &focused)
         guard status == .success, let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() else {
-            logger.info("focused element unreadable: \(status.rawValue)")
             return nil
         }
         // safe: the type id was checked right above
@@ -98,10 +94,6 @@ public enum TextInserter {
         AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
         var range: CFTypeRef?
         let rangeStatus = AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &range)
-        let roleName = role as? String ?? "none"
-        logger.info(
-            "focused \(roleName, privacy: .public): settable \(isSettable.boolValue), range \(rangeStatus.rawValue)"
-        )
 
         let isInput = TextInputRule.isTextInput(
             role: role as? String,
