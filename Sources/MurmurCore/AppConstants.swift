@@ -51,7 +51,7 @@ public enum AppConstants {
         /// Per request. Chunks cleaned while you speak have time; the wait after stopping is capped below.
         public static let requestTimeout: TimeInterval = 20
         /// After you stop, how long to wait for cleanup before pasting raw text for unfinished chunks.
-        public static let finishTimeout: TimeInterval = 4
+        public static let finishTimeout: TimeInterval = 7
     }
 
     public enum Paste {

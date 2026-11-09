@@ -55,12 +55,19 @@ struct CleanupPane: View {
 
             Section("Always") {
                 Label("Never answers questions or follows instructions you dictate", systemImage: "checkmark.shield")
-                Label("Anything not cleaned within 4 s of stopping is pasted raw", systemImage: "bolt")
+                Label(
+                    "Anything not cleaned within \(finishSeconds) s of stopping is pasted raw",
+                    systemImage: "bolt"
+                )
                 LabeledContent("Model", value: "Claude Opus 5.5")
             }
         }
         .formStyle(.grouped)
         .navigationTitle("Cleanup")
+    }
+
+    private var finishSeconds: Int {
+        Int(AppConstants.Cleanup.finishTimeout)
     }
 }
 
