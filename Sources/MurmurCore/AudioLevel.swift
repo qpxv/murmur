@@ -12,6 +12,14 @@ public enum AudioLevel {
         return (sumOfSquares / Float(samples.count)).squareRoot()
     }
 
+    /// Whether any sample hit the ceiling, i.e. the input is too loud and distorts.
+    public static func isClipped(
+        _ samples: UnsafeBufferPointer<Float>,
+        threshold: Float = AppConstants.Audio.clippingThreshold
+    ) -> Bool {
+        samples.contains { abs($0) >= threshold }
+    }
+
     /// Loudness on a decibel scale, so quiet speech still visibly moves the bar.
     public static func normalized(
         rms: Float,

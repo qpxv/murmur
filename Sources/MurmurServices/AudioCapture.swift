@@ -3,11 +3,19 @@ import Foundation
 import MurmurCore
 import os
 
-/// Records an input device and delivers 16 kHz mono 16-bit PCM plus a 0...1 loudness level
-/// for every block. Callbacks arrive on the audio thread.
+/// What one block of microphone audio sounded like.
+public struct AudioBlockMeasure: Sendable {
+    /// 0...1 loudness for the voice bar.
+    public let level: Float
+    /// The input hit full scale, so it's distorting (too loud / gain too high).
+    public let isClipped: Bool
+}
+
+/// Records an input device and delivers 16 kHz mono 16-bit PCM plus a measure of every block.
+/// Callbacks arrive on the audio thread.
 @MainActor
 public final class AudioCapture {
-    public typealias ChunkHandler = @Sendable (_ pcm: Data, _ level: Float) -> Void
+    public typealias ChunkHandler = @Sendable (_ pcm: Data, _ measure: AudioBlockMeasure) -> Void
 
     private var engine: AVAudioEngine?
     private let logger = Logger(subsystem: Log.subsystem, category: "audio")
@@ -69,16 +77,21 @@ public final class AudioCapture {
         -> AVAudioNodeTapBlock
     {
         { @Sendable buffer, _ in
-            let level = level(of: buffer)
+            let measure = measure(buffer)
             guard let pcm = converter.convert(buffer) else { return }
-            onChunk(pcm, level)
+            onChunk(pcm, measure)
         }
     }
 
-    private nonisolated static func level(of buffer: AVAudioPCMBuffer) -> Float {
-        guard let channel = buffer.floatChannelData?[0] else { return 0 }
+    private nonisolated static func measure(_ buffer: AVAudioPCMBuffer) -> AudioBlockMeasure {
+        guard let channel = buffer.floatChannelData?[0] else {
+            return AudioBlockMeasure(level: 0, isClipped: false)
+        }
         let samples = UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength))
-        return AudioLevel.normalized(rms: AudioLevel.rms(of: samples))
+        return AudioBlockMeasure(
+            level: AudioLevel.normalized(rms: AudioLevel.rms(of: samples)),
+            isClipped: AudioLevel.isClipped(samples)
+        )
     }
 }
 

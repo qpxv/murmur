@@ -24,6 +24,8 @@ final class DictationController {
     @ObservationIgnored private var active: ActiveDictation?
     // audio blocks of the current recording, logged on stop: 0 means the mic delivered nothing
     @ObservationIgnored private var capturedBlocks = 0
+    // blocks that hit full scale: a high share means the mic boost distorts the voice
+    @ObservationIgnored private var clippedBlocks = 0
     @ObservationIgnored private var errorResetTask: Task<Void, Never>?
     @ObservationIgnored private var hotkeys: HotkeyMonitor?
     @ObservationIgnored private var accessibilityObserver: (any NSObjectProtocol)?
@@ -137,9 +139,10 @@ final class DictationController {
             micGain.boost(device: device)
         }
         capturedBlocks = 0
-        try audio.start(device: chosenDevice) { [weak self] pcm, level in
+        clippedBlocks = 0
+        try audio.start(device: chosenDevice) { [weak self] pcm, measure in
             stream.send(pcm)
-            Task { @MainActor in self?.record(level: level) }
+            Task { @MainActor in self?.record(measure) }
         }
         Task { await stream.start() }
         let forwarding = Task {
@@ -171,7 +174,9 @@ final class DictationController {
         }
         self.active = nil
         let speakingSeconds = (ContinuousClock.now - active.startedAt) / .seconds(1)
-        logger.notice("recording stopped after \(speakingSeconds) s with \(self.capturedBlocks) audio blocks")
+        let blocks = capturedBlocks
+        let clipped = clippedBlocks
+        logger.notice("recording stopped after \(speakingSeconds) s: \(blocks) audio blocks, \(clipped) clipped")
         Task { await deliver(active, speakingSeconds: speakingSeconds) }
     }
 
@@ -235,11 +240,14 @@ final class DictationController {
         }
     }
 
-    private func record(level: Float) {
+    private func record(_ measure: AudioBlockMeasure) {
         guard state.isRecording else { return }
         capturedBlocks += 1
+        if measure.isClipped {
+            clippedBlocks += 1
+        }
         levels.removeFirst()
-        levels.append(level)
+        levels.append(measure.level)
     }
 }
 

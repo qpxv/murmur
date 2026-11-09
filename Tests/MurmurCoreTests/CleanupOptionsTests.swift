@@ -6,6 +6,8 @@ struct CleanupOptionsTests {
     @Test func defaultPromptHasEveryFixAndKeepsWording() {
         let prompt = CleanupPrompt.system(for: .defaults)
         #expect(prompt.contains("misheard"))
+        #expect(prompt.contains("contradicts what is said right after"))
+        #expect(prompt.contains("when in doubt, leave the words"))
         #expect(prompt.contains("punctuation"))
         #expect(prompt.contains("stutters"))
         #expect(prompt.contains("Keep everything else exactly as spoken"))

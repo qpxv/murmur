@@ -42,7 +42,13 @@ public enum CleanupPrompt {
 
     private static let misheardWords = """
         - Correct words the recognizer misheard, using the surrounding context and the vocabulary \
-        list. Example: in a coding context "clock code" is "Claude Code".
+        list. Example: in a coding context "clock code" is "Claude Code". Recognizers also swap \
+        short words for similar-sounding ones in a way that breaks the meaning: when a word \
+        clearly doesn't fit, or contradicts what is said right after it, use the word the \
+        speaker obviously meant. Example: "this is not funny, this is not cool, this is really \
+        cool" is "this is so funny, this is so cool, this is really cool". Likewise turn a short \
+        phrase that makes no sense where it stands into what was evidently said. Only correct \
+        what the context makes clear; when in doubt, leave the words as they are.
         """
 
     private static let punctuation = """

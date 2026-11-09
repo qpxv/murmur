@@ -13,6 +13,15 @@ struct AudioLevelTests {
         #expect(rms == 0)
     }
 
+    @Test func detectsClippingOnEitherSide() {
+        let clean: [Float] = [0.2, -0.5, 0.9]
+        let positive: [Float] = [0.2, 1.0, 0.1]
+        let negative: [Float] = [-0.995, 0.1]
+        #expect(!clean.withUnsafeBufferPointer { AudioLevel.isClipped($0, threshold: 0.99) })
+        #expect(positive.withUnsafeBufferPointer { AudioLevel.isClipped($0, threshold: 0.99) })
+        #expect(negative.withUnsafeBufferPointer { AudioLevel.isClipped($0, threshold: 0.99) })
+    }
+
     @Test func silenceIsEmptyAndLoudIsFull() {
         #expect(AudioLevel.normalized(rms: 0, floor: -60, ceiling: -20) == 0)
         #expect(AudioLevel.normalized(rms: 0.0001, floor: -60, ceiling: -20) == 0)

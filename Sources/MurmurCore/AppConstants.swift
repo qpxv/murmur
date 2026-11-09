@@ -20,6 +20,8 @@ public enum AppConstants {
         /// Loudness (dBFS) that maps to an empty / full voice bar.
         public static let silenceFloorDecibels: Float = -55
         public static let fullScaleDecibels: Float = -10
+        /// A sample this close to full scale (1.0) counts as clipping.
+        public static let clippingThreshold: Float = 0.99
     }
 
     public enum Deepgram {
