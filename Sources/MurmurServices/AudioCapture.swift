@@ -36,7 +36,9 @@ public final class AudioCapture {
                 logger.error("couldn't switch to the chosen mic, using default: \(error.localizedDescription)")
             }
         }
-        let hardwareFormat = input.outputFormat(forBus: 0)
+        // the device's own format: outputFormat keeps the previous device's format after a switch,
+        // and a tap in that format never gets a single buffer (seen with a 2-channel usb webcam mic)
+        let hardwareFormat = input.inputFormat(forBus: 0)
         guard hardwareFormat.sampleRate > 0,
             let targetFormat = AVAudioFormat(
                 commonFormat: .pcmFormatInt16,
