@@ -42,6 +42,8 @@ struct MenuContent: View {
                 Text(position.title).tag(position)
             }
         }
+        // read on each menu open, so a change made in system settings shows up
+        Toggle("Open at Login", isOn: Binding(get: { LoginItem.isEnabled }, set: LoginItem.setEnabled))
         Divider()
         Button("Open Murmur…", action: showMainWindow)
             .keyboardShortcut(",")

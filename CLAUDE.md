@@ -45,6 +45,9 @@ yet. Follow it when the user asks for the Windows version.
   normal style) means no Claude call at all.
 - **Mic selection:** only switch the engine's device when the user picked a specific mic.
   Forcing even the default device onto `AVAudioEngine` left it silent once.
+- **Open at login:** `SMAppService.mainApp` (`LoginItem`), toggled from the menu bar and Keys &
+  Permissions. macOS holds the state (the user can change it in Login Items), never `Settings`.
+  Off by default. It points at `build/Murmur.app`, which `bundle.sh` rebuilds at the same path.
 - **Signing** (`scripts/bundle.sh`): Apple Development cert if present, else the self-signed
   "Murmur Local Signing", else ad hoc. With the self-signed cert, Keychain re-asks after every
   build (partition is the binary's cdhash); an Apple Development cert (team id) fixes that.

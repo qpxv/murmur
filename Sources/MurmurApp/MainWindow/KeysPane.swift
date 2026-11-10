@@ -40,11 +40,34 @@ struct KeysPane: View {
                 )
             }
             .id(refreshCount)
+            startupSection
         }
         .formStyle(.grouped)
         .navigationTitle("Keys & Permissions")
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshCount += 1
+        }
+    }
+
+    private var startupSection: some View {
+        Section("Startup") {
+            Toggle(
+                "Open Murmur at login",
+                isOn: Binding(
+                    get: { LoginItem.isEnabled },
+                    set: { isEnabled in
+                        LoginItem.setEnabled(isEnabled)
+                        refreshCount += 1
+                    }
+                )
+            )
+            if LoginItem.needsApproval {
+                PermissionRow(
+                    title: "Allowed in Login Items",
+                    isGranted: false,
+                    action: LoginItem.openSettings
+                )
+            }
         }
     }
 
