@@ -25,6 +25,10 @@ text appears wherever your cursor is: fast, accurate, and cleaned up by Claude. 
 | **fn** + any other key | Cancelled (it's a shortcut, not dictation) |
 | Tap **fn** briefly | Ignored |
 
+**fn** is the default dictation key. Any single key works instead: Murmur → **Shortcut & Overlay** →
+**Record…**, press the key (Escape cancels). That key then only dictates (fn is the exception: it
+keeps working for fn + arrows and the F-keys).
+
 The black pill (top or bottom of the screen, your choice) shows the live voice bar while
 recording. Menu bar waveform → **Open Murmur…** (⌘,) opens the app window.
 
@@ -82,8 +86,10 @@ place, since Windows can't see fn:
 | **Caps Lock** + any other key | Cancelled |
 | Tap **Caps Lock** briefly | Ignored |
 
-Caps Lock no longer switches to capitals while Murmur runs (Shift still types them). If it was on
-when Murmur started, Murmur turns it off once.
+Caps Lock no longer switches to capitals while Murmur runs (Shift still types them). If it's on,
+Murmur turns it off again on the next press. Don't want that? Pick another key: **Shortcut & Overlay**
+→ **Record…**, press any single key (right Ctrl, right Alt, F13, ...). That key then only dictates,
+and Caps Lock works normally again.
 
 1. **Download:** GitHub (signed in, in the browser) → **Releases** → latest `windows-v…` →
    `Murmur.exe`. Builds between releases: **Actions** → latest **windows** run → **Murmur-windows**.

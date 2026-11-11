@@ -10,10 +10,14 @@ owns architecture, quality and maintenance.
 
 ## Behaviour
 
-- **fn hold** = push to talk, release stops. **fn + space** (while fn is held) locks
-  recording; the next fn press stops it. The space is swallowed, never typed.
-- An unlocked fn press shorter than `AppConstants.Hotkey.minimumHold` is discarded, and so is
-  an unlocked recording where another key is pressed with fn (fn + arrow etc. are shortcuts).
+- **Dictation key** (`Settings.hotkey`, fn by default; Windows: Caps Lock) hold = push to talk,
+  release stops. **key + space** (while held) locks recording; the next press stops it. The space
+  is swallowed, never typed. Any single key can be recorded in Shortcut & Overlay (`HotkeyRecorder`:
+  a modifier counts on release, a combination is rejected, Escape cancels, space can't be it). The
+  chosen key is taken over completely: its events are swallowed and, for a modifier, its flag is
+  stripped from other keys while held. fn is the exception (not swallowed: fn + arrows, F-keys).
+- An unlocked press shorter than `AppConstants.Hotkey.minimumHold` is discarded, and so is
+  an unlocked recording where another key is pressed with the dictation key.
 - While recording, the user can click around, switch apps, use Mission Control: nothing is
   tied to the app that was focused at start. The overlay never takes focus.
 - On stop: if a text input is focused *at that moment*, paste into it (clipboard restored
@@ -131,9 +135,12 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
   self-contained `Murmur.exe` per push; a `windows-v*` tag matching `<Version>` makes a Release.
   The version lives once, in `Directory.Build.props`, so every assembly carries it.
   `.gitattributes` forces LF (the runner would check out CRLF and `dotnet format` fails).
-- **Hotkey:** Caps Lock through a low-level keyboard hook on the UI thread (`KeyboardHook`). The
-  hook only decides and swallows; work is dispatched after it returns (Windows drops slow hooks).
-  Caps Lock is always swallowed; injected keys (our Ctrl+V) pass through.
+- **Hotkey:** `Settings.Hotkey` (a virtual key, Caps Lock by default) through a low-level keyboard
+  hook on the UI thread (`KeyboardHook`). The hook only decides and swallows; work is dispatched
+  after it returns (Windows drops slow hooks). The key is always swallowed (with right Alt, also
+  AltGr's made-up left Ctrl, scan code 0x21D); injected keys (our Ctrl+V) pass through. While Caps
+  Lock is the key, each release turns its toggle off again (the hook can't see keys while an admin
+  window has focus, so it can get switched on).
 - **Audio:** `WasapiRecorderBuilder` (NAudio 3; `WasapiCapture` is obsolete) in the device's mix
   format, converted to 16 kHz mono by NAudio's WDL resampler, not the engine's auto-convert.
 - **Paste:** UI Automation always off the UI thread (it deadlocks on our own windows otherwise).

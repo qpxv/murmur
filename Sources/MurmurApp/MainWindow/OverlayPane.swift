@@ -2,22 +2,35 @@ import MurmurCore
 import MurmurServices
 import SwiftUI
 
-/// How the fn shortcut works, and where the pill sits.
+/// Which key dictates and how it works, and where the pill sits.
 struct OverlayPane: View {
+    let dictation: DictationController
     @Bindable var settingsStore: SettingsStore
+    @State private var isRecording = false
+    @State private var rejection: HotkeyRejection?
+
+    private var hotkey: Hotkey { settingsStore.settings.hotkey }
+    private var name: String { KeyName.of(hotkey) }
 
     var body: some View {
         Form {
-            Section("Dictate") {
-                LabeledContent("Hold fn", value: "Talk, release to paste")
-                LabeledContent("fn + space", value: "Lock recording, hands free")
-                LabeledContent("fn (while locked)", value: "Stop and paste")
-                LabeledContent("fn + another key", value: "Cancels, it's a shortcut")
-                PermissionRow(
-                    title: "🌐 key set to “Do Nothing”",
-                    isGranted: Permissions.isFnKeyFree,
-                    action: Permissions.openKeyboardSettings
-                )
+            Section {
+                keyRow
+                LabeledContent("Hold \(name)", value: "Talk, release to paste")
+                LabeledContent("\(name) + space", value: "Lock recording, hands free")
+                LabeledContent("\(name) (while locked)", value: "Stop and paste")
+                LabeledContent("\(name) + another key", value: "Cancels")
+                if hotkey == .function {
+                    PermissionRow(
+                        title: "🌐 key set to “Do Nothing”",
+                        isGranted: Permissions.isFnKeyFree,
+                        action: Permissions.openKeyboardSettings
+                    )
+                }
+            } header: {
+                Text("Dictate")
+            } footer: {
+                Text(footer)
             }
             Section("Pill position") {
                 PositionPicker(selection: $settingsStore.settings.overlayPosition)
@@ -26,6 +39,52 @@ struct OverlayPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Shortcut & Overlay")
+        .onDisappear { dictation.cancelHotkeyRecording() }
+    }
+
+    private var keyRow: some View {
+        LabeledContent("Dictation key") {
+            HStack {
+                if let rejection {
+                    Text(rejection.message).foregroundStyle(.orange)
+                }
+                Text(isRecording ? "Press a key…" : name)
+                    .foregroundStyle(isRecording ? .secondary : .primary)
+                Button(isRecording ? "Cancel" : "Record…", action: toggleRecording)
+                    .disabled(!dictation.isHotkeyActive)
+                if hotkey != .function && !isRecording {
+                    Button("Reset") {
+                        rejection = nil
+                        dictation.changeHotkey(to: .function)
+                    }
+                }
+            }
+        }
+    }
+
+    private var footer: String {
+        if !dictation.isHotkeyActive {
+            return "Recording a key needs Accessibility access (Keys & Permissions)."
+        }
+        if hotkey.isTakenOver {
+            return "\(name) only dictates while Murmur runs. It does nothing else."
+        }
+        return "Any single key works, e.g. right ⌘. It then only dictates. Escape cancels recording."
+    }
+
+    private func toggleRecording() {
+        guard !isRecording else {
+            dictation.cancelHotkeyRecording()
+            return
+        }
+        rejection = nil
+        isRecording = true
+        dictation.recordHotkey { result in
+            isRecording = false
+            if case .rejected(let reason) = result {
+                rejection = reason
+            }
+        }
     }
 }
 

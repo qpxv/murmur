@@ -6,7 +6,7 @@ using Murmur.Services;
 namespace Murmur.App;
 
 /// <summary>
-/// Runs one dictation at a time: Caps Lock -> mic -> Deepgram -> Claude cleanup -> paste or
+/// Runs one dictation at a time: dictation key -> mic -> Deepgram -> Claude cleanup -> paste or
 /// clipboard. Owns the one <see cref="DictationState"/> the pill renders. Lives on the UI thread.
 /// </summary>
 public sealed class DictationController : IDisposable
@@ -57,12 +57,47 @@ public sealed class DictationController : IDisposable
     /// <summary>A dictation finished and was pasted or copied.</summary>
     public event EventHandler<DeliveredEventArgs>? Delivered;
 
-    /// <summary>Called once at launch: undo a mic boost a crash left behind, start listening for Caps Lock.</summary>
+    /// <summary>Called once at launch: undo a mic boost a crash left behind, start listening for the dictation key.</summary>
     public bool Activate()
     {
         MicBoost.RestorePendingFromLastRun();
+        _hook.Hotkey = _settings.Current.Hotkey;
         return _hook.Start();
     }
+
+    /// <summary>Makes <paramref name="hotkey"/> the dictation key, right away.</summary>
+    public void ChangeHotkey(Hotkey hotkey)
+    {
+        Cancel();
+        _settings.Update(current => current with { Hotkey = hotkey });
+        _hook.Hotkey = hotkey;
+        Log.Info(Category, $"dictation key changed to virtual key {hotkey.VirtualKey:X2}");
+    }
+
+    /// <summary>
+    /// Waits for the next single key and makes it the dictation key. <paramref name="completion"/> gets
+    /// the outcome on the UI thread (also a rejection or a cancel), so the caller can say what happened.
+    /// </summary>
+    public void RecordHotkey(Action<HotkeyRecording> completion)
+    {
+        if (!_hook.IsActive)
+        {
+            completion(HotkeyRecording.Cancelled);
+            return;
+        }
+        Cancel();
+        // the result is decided inside the hook: act on it once the hook has returned
+        _hook.Record(result => _dispatcher.BeginInvoke(() =>
+        {
+            if (result is HotkeyRecording.RecordedState recorded)
+            {
+                ChangeHotkey(recorded.Hotkey);
+            }
+            completion(result);
+        }));
+    }
+
+    public void CancelHotkeyRecording() => _hook.CancelRecording();
 
     /// <summary>Called on quit: never leave the mic boosted or a socket open.</summary>
     public void Dispose()
@@ -87,7 +122,7 @@ public sealed class DictationController : IDisposable
         {
             _dispatcher.BeginInvoke(() => Perform(action));
         }
-        // every space typed while caps lock is down during a recording belongs to the lock gesture
+        // every space typed while the dictation key is down during a recording belongs to the lock gesture
         return keyEvent == KeyboardHook.KeyEvent.Space && (action == HotkeyAction.Lock || State.IsRecording);
     }
 

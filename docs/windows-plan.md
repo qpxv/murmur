@@ -15,7 +15,7 @@ Murmur works on the Mac (see `README.md` and `CLAUDE.md`). The user wants the sa
 their Windows work laptop, as a downloadable `.exe`.
 
 Swift doesn't run on Windows, so this is a second app with the same behaviour. Decided with the user:
-- **Caps Lock** is the hotkey. Windows can't see fn (laptop keyboards handle it in firmware): hold
+- **Caps Lock** is the default hotkey (any single key can be recorded instead, see CLAUDE.md). Windows can't see fn (laptop keyboards handle it in firmware): hold
   Caps Lock to talk, Caps Lock + space locks, Caps Lock stops a locked recording.
 - **Same repo**, in a `windows/` folder.
 - Whether IT allows unsigned `.exe` files and sending speech to Deepgram/Anthropic is the user's to

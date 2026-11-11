@@ -39,7 +39,7 @@ final class DictationController {
     }
 
     /// Called once at launch: undo a mic boost a crash left behind, ask for permissions,
-    /// start listening for fn.
+    /// start listening for the dictation key.
     func activate() {
         micGain.restorePendingFromLastRun()
         Task { _ = await Permissions.requestMicrophone() }
@@ -53,7 +53,7 @@ final class DictationController {
         }
     }
 
-    /// Installs the fn listener, prompting for Accessibility if it's missing.
+    /// Installs the dictation key listener, prompting for Accessibility if it's missing.
     func enableHotkey() {
         startHotkey()
         if !isHotkeyActive {
@@ -63,11 +63,40 @@ final class DictationController {
 
     private func startHotkey() {
         let monitor = hotkeys ?? HotkeyMonitor { [weak self] event in self?.handle(event) ?? false }
+        monitor.hotkey = settingsStore.settings.hotkey
         hotkeys = monitor
         isHotkeyActive = monitor.start()
     }
 
-    // the user just flipped some app's accessibility switch; if it was ours, start listening for fn
+    /// Makes `hotkey` the dictation key, right away.
+    func changeHotkey(to hotkey: Hotkey) {
+        cancel()
+        settingsStore.settings.hotkey = hotkey
+        hotkeys?.hotkey = hotkey
+        logger.notice("dictation key changed to key code \(hotkey.keyCode)")
+    }
+
+    /// Waits for the next single key and makes it the dictation key. `completion` gets the outcome
+    /// (also a rejection or a cancel), so the caller can say what happened.
+    func recordHotkey(completion: @escaping @MainActor (HotkeyRecording) -> Void) {
+        guard let hotkeys, isHotkeyActive else {
+            completion(.cancelled)
+            return
+        }
+        cancel()
+        hotkeys.record { [weak self] result in
+            if case .recorded(let hotkey) = result {
+                self?.changeHotkey(to: hotkey)
+            }
+            completion(result)
+        }
+    }
+
+    func cancelHotkeyRecording() {
+        hotkeys?.cancelRecording()
+    }
+
+    // the user just flipped some app's accessibility switch; if it was ours, start listening for the key
     // right away instead of waiting for a click in the menu
     private func retryHotkeyAfterAccessibilityChange() async {
         guard !isHotkeyActive else { return }
@@ -91,7 +120,7 @@ final class DictationController {
             case .otherKey: gesture.otherKeyDown()
             }
         perform(action)
-        // every space typed while fn is down during a recording belongs to the lock gesture
+        // every space typed while the dictation key is down during a recording belongs to the lock gesture
         if case .space = event { return state.isRecording }
         return false
     }

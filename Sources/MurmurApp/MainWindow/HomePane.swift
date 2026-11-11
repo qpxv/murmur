@@ -90,7 +90,9 @@ struct HomePane: View {
             ContentUnavailableView(
                 "No dictations yet",
                 systemImage: "waveform",
-                description: Text("Hold fn and start talking. Your dictations show up here.")
+                description: Text(
+                    "Hold \(KeyName.of(settingsStore.settings.hotkey)) and start talking. Your dictations show up here."
+                )
             )
             .frame(maxWidth: .infinity)
         } else {

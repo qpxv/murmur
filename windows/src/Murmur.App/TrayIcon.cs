@@ -17,7 +17,7 @@ public sealed class TrayIcon : IDisposable
 
     public TrayIcon(Action openWindow, Action checkForUpdates, Action copyDiagnostics, Action quit)
     {
-        _hint = new ToolStripMenuItem(HintText(isHotkeyActive: true)) { Enabled = false };
+        _hint = new ToolStripMenuItem { Enabled = false };
         _startWithWindows = new ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
         // click, not CheckedChanged: re-reading the state when the menu opens must not write it back
         _startWithWindows.Click += (_, _) => StartWithWindows.SetEnabled(_startWithWindows.Checked);
@@ -50,8 +50,9 @@ public sealed class TrayIcon : IDisposable
         };
     }
 
-    /// <summary>Shows whether Caps Lock dictation works right now.</summary>
-    public void SetHotkeyActive(bool isActive) => _hint.Text = HintText(isActive);
+    /// <summary>Shows which key dictates and whether it works right now.</summary>
+    public void SetHint(bool isHotkeyActive, string keyName) =>
+        _hint.Text = isHotkeyActive ? $"Hold {keyName} to dictate, {keyName} + Space to lock" : $"{keyName} shortcut isn't running";
 
     public void ShowBalloon(string title, string body) => _icon.ShowBalloonTip(0, title, body, ToolTipIcon.Info);
 
@@ -64,9 +65,6 @@ public sealed class TrayIcon : IDisposable
         _hint.Dispose();
         _startWithWindows.Dispose();
     }
-
-    private static string HintText(bool isHotkeyActive) =>
-        isHotkeyActive ? "Hold Caps Lock to dictate, Caps Lock + Space to lock" : "Caps Lock shortcut isn't running";
 
     private static Icon LoadIcon()
     {

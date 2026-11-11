@@ -120,7 +120,7 @@ public enum TextInserter {
         let keyCode = CGKeyCode(kVK_ANSI_V)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: false)
-        // set explicitly so a still-held fn key doesn't turn this into fn+cmd+v
+        // set explicitly so a still-held dictation key doesn't turn this into fn+cmd+v
         keyDown?.flags = .maskCommand
         keyUp?.flags = .maskCommand
         keyDown?.post(tap: .cgSessionEventTap)

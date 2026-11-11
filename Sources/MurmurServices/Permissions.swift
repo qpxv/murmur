@@ -9,7 +9,7 @@ public enum Permissions {
     private static let accessibilitySettingsURL =
         "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
     private static let keyboardSettingsURL = "x-apple.systempreferences:com.apple.Keyboard-Settings.extension"
-    // "Press 🌐 key to": 0 means "Do nothing", anything else fights with the fn hotkey
+    // "Press 🌐 key to": 0 means "Do nothing", anything else fights with fn as the dictation key
     private static let fnUsageDomain = "com.apple.HIToolbox"
     private static let fnUsageKey = "AppleFnUsageType"
 
@@ -29,7 +29,7 @@ public enum Permissions {
         }
     }
 
-    /// Needed for the fn hotkey (event tap) and for pasting into other apps.
+    /// Needed for the dictation key (event tap) and for pasting into other apps.
     public static var isAccessibilityTrusted: Bool {
         AXIsProcessTrusted()
     }

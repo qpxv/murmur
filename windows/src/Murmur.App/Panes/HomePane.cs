@@ -22,7 +22,7 @@ public static class HomePane
             Source(services.Sync.Status),
             Cards(stats),
             TypingSpeed(services.Settings),
-            Recent(services.History.Current.Records));
+            Recent(services.History.Current.Records, KeyNames.Of(services.Settings.Current.Hotkey)));
     }
 
     // where the numbers come from, so a missing device is never a mystery
@@ -86,12 +86,12 @@ public static class HomePane
             Ui.Row("Your typing speed", Ui.Horizontal(Theme.Window.RowSpacing, field, Ui.Secondary("WPM"))));
     }
 
-    private static StackPanel Recent(IReadOnlyList<DictationRecord> records)
+    private static StackPanel Recent(IReadOnlyList<DictationRecord> records, string hotkeyName)
     {
         var title = Ui.Text("Recent", Theme.Window.HeaderFontSize, FontWeights.SemiBold);
         if (records.Count == 0)
         {
-            return Ui.Stack(Theme.Window.RowSpacing, title, Ui.Empty("No dictations yet", "Hold Caps Lock and start talking. Your dictations show up here."));
+            return Ui.Stack(Theme.Window.RowSpacing, title, Ui.Empty("No dictations yet", $"Hold {hotkeyName} and start talking. Your dictations show up here."));
         }
         var rows = records.Take(Theme.Window.RecentCount).Select(record => DictationRow.Build(record, showsOriginal: false));
         return Ui.Section("Recent", footer: null, [.. rows]);

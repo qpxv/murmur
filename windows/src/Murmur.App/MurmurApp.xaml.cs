@@ -10,7 +10,7 @@ namespace Murmur.App;
 public sealed partial class MurmurApp : Application, IDisposable
 {
     private const string Category = "app";
-    // one murmur per user session: a second copy would install a second caps lock hook
+    // one murmur per user session: a second copy would install a second keyboard hook
     private const string InstanceMutexName = @"Local\Murmur.SingleInstance";
     // starting the exe again while it runs opens the window of the running copy
     private const string OpenWindowEventName = @"Local\Murmur.OpenWindow";
@@ -58,7 +58,7 @@ public sealed partial class MurmurApp : Application, IDisposable
             checkForUpdates: CheckForUpdates,
             copyDiagnostics: CopyDiagnostics,
             quit: Shutdown);
-        _services = new AppServices(settings, history, sync, Navigate: _ => { }, CopyDiagnostics, CheckForUpdates);
+        _services = new AppServices(settings, dictation, history, sync, Navigate: _ => { }, CopyDiagnostics, CheckForUpdates);
         _dictation = dictation;
         _tray = tray;
 
@@ -74,7 +74,8 @@ public sealed partial class MurmurApp : Application, IDisposable
         pill.Show();
 
         var isHotkeyActive = dictation.Activate();
-        tray.SetHotkeyActive(isHotkeyActive);
+        tray.SetHint(isHotkeyActive, KeyNames.Of(settings.Current.Hotkey));
+        settings.Changed += (_, _) => tray.SetHint(dictation.IsHotkeyActive, KeyNames.Of(settings.Current.Hotkey));
         if (!isHotkeyActive)
         {
             tray.ShowBalloon(UserMessages.HookFailedTitle, UserMessages.HookFailedBody);
@@ -207,7 +208,7 @@ public sealed partial class MurmurApp : Application, IDisposable
     {
         var report = DiagnosticsReport.Build(
         [
-            new("caps lock hook", _dictation?.IsHotkeyActive == true ? "running" : "not running"),
+            new("hotkey hook", _dictation?.IsHotkeyActive == true ? "running" : "not running"),
             new("state", _dictation?.State.ToString() ?? "none"),
             new("default mic", AudioDevices.DefaultInputName()),
             new("mics", string.Join(", ", AudioDevices.Inputs().Select(device => device.Name))),

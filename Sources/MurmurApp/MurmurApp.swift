@@ -12,6 +12,7 @@ struct MurmurApp: App {
         }
         Window("Murmur", id: MainWindow.id) {
             MainWindow(
+                dictation: appDelegate.dictation,
                 settingsStore: appDelegate.settingsStore,
                 historyStore: appDelegate.historyStore,
                 statsSync: appDelegate.statsSync

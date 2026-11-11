@@ -17,6 +17,7 @@ public class SettingsTests
             TypingWordsPerMinute = 65,
             IsHistoryEnabled = false,
             SyncDeviceName = "Mia's laptop",
+            Hotkey = new Hotkey(0xA3),
         };
         Assert.Equal(settings, SettingsJson.Decode(SettingsJson.Encode(settings)));
     }
@@ -31,6 +32,7 @@ public class SettingsTests
             Cleanup = CleanupOptions.Defaults with { Style = CleanupStyle.Formal },
         };
         Assert.Equal(expected, settings);
+        Assert.Equal(Hotkey.CapsLock, settings?.Hotkey);
     }
 
     [Fact]

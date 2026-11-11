@@ -15,6 +15,7 @@ struct SettingsTests {
         settings.typingWordsPerMinute = 65
         settings.isHistoryEnabled = false
         settings.syncDeviceName = "Mia's Mac"
+        settings.hotkey = Hotkey(keyCode: Hotkey.KeyCode.rightOption)
         let data = try JSONEncoder().encode(settings)
         #expect(try JSONDecoder().decode(Settings.self, from: data) == settings)
     }
@@ -25,6 +26,7 @@ struct SettingsTests {
         var expected = Settings.defaults
         expected.isMicBoostEnabled = false
         #expect(settings == expected)
+        #expect(settings.hotkey == .function)
     }
 
     @Test func addsTrimmedNewTerm() {

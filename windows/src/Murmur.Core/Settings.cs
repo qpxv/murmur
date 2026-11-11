@@ -34,6 +34,9 @@ public sealed record Settings
     /// <summary>How this device is labelled in synced stats; empty uses the computer's name.</summary>
     public string SyncDeviceName { get; init; } = "";
 
+    /// <summary>The key that dictates while held.</summary>
+    public Hotkey Hotkey { get; init; } = Hotkey.CapsLock;
+
     public static Settings Defaults { get; } = new();
 
     /// <summary>
@@ -58,7 +61,8 @@ public sealed record Settings
         && Cleanup == other.Cleanup
         && TypingWordsPerMinute == other.TypingWordsPerMinute
         && IsHistoryEnabled == other.IsHistoryEnabled
-        && SyncDeviceName == other.SyncDeviceName;
+        && SyncDeviceName == other.SyncDeviceName
+        && Hotkey == other.Hotkey;
 
     public override int GetHashCode() => HashCode.Combine(IsMicBoostEnabled, InputDeviceId, OverlayPosition, Cleanup);
 }

@@ -7,6 +7,7 @@ import SwiftUI
 struct MainWindow: View {
     static let id = "main"
 
+    let dictation: DictationController
     @Bindable var settingsStore: SettingsStore
     let historyStore: HistoryStore
     let statsSync: StatsSyncController
@@ -38,7 +39,7 @@ struct MainWindow: View {
         case .vocabulary: VocabularyPane(settingsStore: settingsStore)
         case .cleanup: CleanupPane(settingsStore: settingsStore, selection: $selection)
         case .audio: AudioPane(settingsStore: settingsStore)
-        case .overlay: OverlayPane(settingsStore: settingsStore)
+        case .overlay: OverlayPane(dictation: dictation, settingsStore: settingsStore)
         case .keys: KeysPane(settingsStore: settingsStore, statsSync: statsSync)
         }
     }

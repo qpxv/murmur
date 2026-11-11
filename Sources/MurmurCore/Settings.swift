@@ -21,6 +21,8 @@ public struct Settings: Codable, Equatable, Sendable {
     public var isHistoryEnabled: Bool
     /// How this device is labelled in synced stats; empty uses the computer's name.
     public var syncDeviceName: String
+    /// The key that dictates while held.
+    public var hotkey: Hotkey
 
     public static let defaults = Self(
         isMicBoostEnabled: true,
@@ -31,7 +33,8 @@ public struct Settings: Codable, Equatable, Sendable {
         cleanup: .defaults,
         typingWordsPerMinute: 100,
         isHistoryEnabled: true,
-        syncDeviceName: ""
+        syncDeviceName: "",
+        hotkey: .function
     )
 
     private init(
@@ -43,7 +46,8 @@ public struct Settings: Codable, Equatable, Sendable {
         cleanup: CleanupOptions,
         typingWordsPerMinute: Int,
         isHistoryEnabled: Bool,
-        syncDeviceName: String
+        syncDeviceName: String,
+        hotkey: Hotkey
     ) {
         self.isMicBoostEnabled = isMicBoostEnabled
         self.inputDeviceUID = inputDeviceUID
@@ -54,6 +58,7 @@ public struct Settings: Codable, Equatable, Sendable {
         self.typingWordsPerMinute = typingWordsPerMinute
         self.isHistoryEnabled = isHistoryEnabled
         self.syncDeviceName = syncDeviceName
+        self.hotkey = hotkey
     }
 
     // missing keys fall back to the defaults, so adding a setting never wipes the saved ones
@@ -77,6 +82,7 @@ public struct Settings: Codable, Equatable, Sendable {
             try container.decodeIfPresent(Bool.self, forKey: .isHistoryEnabled) ?? fallback.isHistoryEnabled
         syncDeviceName =
             try container.decodeIfPresent(String.self, forKey: .syncDeviceName) ?? fallback.syncDeviceName
+        hotkey = try container.decodeIfPresent(Hotkey.self, forKey: .hotkey) ?? fallback.hotkey
     }
 
     /// Adds a vocabulary term unless it's blank or already there (ignoring case).

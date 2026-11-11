@@ -29,15 +29,17 @@ struct KeysPane: View {
                     action: Permissions.openMicrophoneSettings
                 )
                 PermissionRow(
-                    title: "Accessibility (fn hotkey and pasting)",
+                    title: "Accessibility (dictation key and pasting)",
                     isGranted: Permissions.isAccessibilityTrusted,
                     action: Permissions.openAccessibilitySettings
                 )
-                PermissionRow(
-                    title: "🌐 key set to “Do Nothing”",
-                    isGranted: Permissions.isFnKeyFree,
-                    action: Permissions.openKeyboardSettings
-                )
+                if settingsStore.settings.hotkey == .function {
+                    PermissionRow(
+                        title: "🌐 key set to “Do Nothing”",
+                        isGranted: Permissions.isFnKeyFree,
+                        action: Permissions.openKeyboardSettings
+                    )
+                }
             }
             .id(refreshCount)
             startupSection

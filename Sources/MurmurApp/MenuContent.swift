@@ -11,9 +11,9 @@ struct MenuContent: View {
 
     var body: some View {
         if !dictation.isHotkeyActive {
-            Button("Turn On fn Hotkey (Needs Accessibility)…") { dictation.enableHotkey() }
+            Button("Turn On \(hotkeyName) Shortcut (Needs Accessibility)…") { dictation.enableHotkey() }
         }
-        if !Permissions.isFnKeyFree {
+        if settingsStore.settings.hotkey == .function && !Permissions.isFnKeyFree {
             Button("Set “Press 🌐 key to” to “Do Nothing”…") { Permissions.openKeyboardSettings() }
         }
         if !Permissions.isMicrophoneAuthorized {
@@ -25,7 +25,7 @@ struct MenuContent: View {
             Button("Add Claude Key for Cleanup…", action: showMainWindow)
         }
         if dictation.isHotkeyActive {
-            Text("Hold fn to dictate, fn + space to lock")
+            Text("Hold \(hotkeyName) to dictate, \(hotkeyName) + space to lock")
         }
         Divider()
         Toggle("Clean Up with Claude", isOn: $settingsStore.settings.isCleanupEnabled)
@@ -47,8 +47,14 @@ struct MenuContent: View {
         Divider()
         Button("Open Murmur…", action: showMainWindow)
             .keyboardShortcut(",")
+        Button("Restart Murmur") { Relaunch.now() }
+            .keyboardShortcut("r")
         Button("Quit Murmur") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    private var hotkeyName: String {
+        KeyName.of(settingsStore.settings.hotkey)
     }
 
     private func showMainWindow() {
