@@ -27,6 +27,9 @@ public sealed class DictationController : IDisposable
     private int _capturedBlocks;
     // blocks that hit full scale: a high share means the mic boost distorts the voice
     private int _clippedBlocks;
+    // the loudest block since the voice bar last moved, and when it moved
+    private float _pendingLevel;
+    private long _lastBarAt;
 
     public DictationController(SettingsStore settings, Dispatcher dispatcher)
     {
@@ -146,6 +149,8 @@ public sealed class DictationController : IDisposable
         }
         _capturedBlocks = 0;
         _clippedBlocks = 0;
+        _pendingLevel = 0;
+        _lastBarAt = Stopwatch.GetTimestamp();
         try
         {
             _audio.Start(settings.InputDeviceId, (pcm, measure) =>
@@ -325,8 +330,15 @@ public sealed class DictationController : IDisposable
         {
             _clippedBlocks++;
         }
+        _pendingLevel = Math.Max(_pendingLevel, measure.Level);
+        if (Stopwatch.GetElapsedTime(_lastBarAt) < AppConstants.Overlay.VoiceBarStep)
+        {
+            return;
+        }
+        _lastBarAt = Stopwatch.GetTimestamp();
         Array.Copy(_levels, 1, _levels, 0, _levels.Length - 1);
-        _levels[^1] = measure.Level;
+        _levels[^1] = _pendingLevel;
+        _pendingLevel = 0;
         LevelsChanged?.Invoke(this, EventArgs.Empty);
     }
 

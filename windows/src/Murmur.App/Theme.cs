@@ -45,6 +45,8 @@ public static class Theme
         public const double BarSpacing = 2;
         public const double MinBarHeight = 2;
         public const double MaxBarHeight = 15;
+        /// <summary>Each bar glides to its new height instead of jumping (the mac's level animation).</summary>
+        public static readonly Duration LevelAnimation = new(TimeSpan.FromMilliseconds(80));
     }
 
     public static class Window

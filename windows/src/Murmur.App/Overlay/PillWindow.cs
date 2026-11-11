@@ -126,7 +126,9 @@ public sealed class PillWindow : Window
         for (var index = 0; index < _bars.Length; index++)
         {
             var level = index >= offset ? levels[index - offset] : 0;
-            _bars[index].Height = Theme.VoiceBar.MinBarHeight + ((Theme.VoiceBar.MaxBarHeight - Theme.VoiceBar.MinBarHeight) * level);
+            var height = Theme.VoiceBar.MinBarHeight + ((Theme.VoiceBar.MaxBarHeight - Theme.VoiceBar.MinBarHeight) * level);
+            // ends on its own after the glide, so nothing keeps running once recording stops
+            _bars[index].BeginAnimation(HeightProperty, new DoubleAnimation(height, Theme.VoiceBar.LevelAnimation));
         }
     }
 

@@ -111,6 +111,11 @@ public static class AppConstants
         public static readonly TimeSpan ErrorDisplayDuration = TimeSpan.FromSeconds(3);
         /// <summary>Number of bars in the voice bar, and therefore how many recent levels are kept.</summary>
         public const int VoiceBarCount = 14;
+        /// <summary>
+        /// How often the voice bar moves by one bar: the mac's pace (one 1024-frame tap block at
+        /// 48 kHz). Windows delivers audio in smaller packets, so it's paced by time, not by packet.
+        /// </summary>
+        public static readonly TimeSpan VoiceBarStep = TimeSpan.FromMilliseconds(21);
     }
 
     public static class Storage
