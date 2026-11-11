@@ -30,7 +30,11 @@ public static class KeysPane
         Ui.Section(
             "Help",
             "Version, setup and the newest log lines (never keys or what you said), ready to paste into a chat.",
-            Ui.Horizontal(Theme.Window.RowSpacing, Ui.Button("Copy diagnostics", services.CopyDiagnostics), Ui.Secondary(DiagnosticsReport.Version))));
+            Ui.Horizontal(
+                Theme.Window.RowSpacing,
+                Ui.Button("Check for updates", services.CheckForUpdates),
+                Ui.Button("Copy diagnostics", services.CopyDiagnostics),
+                Ui.Secondary(DiagnosticsReport.Version))));
 
     private static StackPanel StatsSyncSection(AppServices services)
     {

@@ -22,12 +22,14 @@ public sealed partial class MurmurApp : Application, IDisposable
     private DictationController? _dictation;
     private AppServices? _services;
     private MainWindow? _window;
+    private bool _isUpdating;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         HandleCrashes();
-        _instance = new Mutex(initiallyOwned: true, InstanceMutexName, out var isFirstInstance);
+        var isAfterUpdate = e.Args.Contains(AppConstants.Update.RestartArgument);
+        var isFirstInstance = AcquireInstance(waitForPrevious: isAfterUpdate);
         _openWindowSignal = new EventWaitHandle(initialState: false, EventResetMode.AutoReset, OpenWindowEventName);
         if (!isFirstInstance)
         {
@@ -37,6 +39,7 @@ public sealed partial class MurmurApp : Application, IDisposable
             return;
         }
         Log.Info(Category, $"started {DiagnosticsReport.Version} on windows {Environment.OSVersion.Version}");
+        Updater.CleanUp();
         // the wait costs nothing until the event is set
         _openWindowWait = ThreadPool.RegisterWaitForSingleObject(
             _openWindowSignal,
@@ -50,8 +53,12 @@ public sealed partial class MurmurApp : Application, IDisposable
         var sync = new StatsSyncController(history, settings);
         var dictation = new DictationController(settings, Dispatcher);
         var pill = new PillWindow(settings);
-        var tray = new TrayIcon(openWindow: () => OpenWindow(null), copyDiagnostics: CopyDiagnostics, quit: Shutdown);
-        _services = new AppServices(settings, history, sync, Navigate: _ => { }, CopyDiagnostics);
+        var tray = new TrayIcon(
+            openWindow: () => OpenWindow(null),
+            checkForUpdates: CheckForUpdates,
+            copyDiagnostics: CopyDiagnostics,
+            quit: Shutdown);
+        _services = new AppServices(settings, history, sync, Navigate: _ => { }, CopyDiagnostics, CheckForUpdates);
         _dictation = dictation;
         _tray = tray;
 
@@ -78,6 +85,76 @@ public sealed partial class MurmurApp : Application, IDisposable
         if (!CredentialStore.Contains(AppConstants.Credentials.DeepgramTarget))
         {
             OpenWindow(Pane.Keys);
+        }
+        if (isAfterUpdate)
+        {
+            tray.ShowBalloon(UserMessages.UpdatedTitle, UserMessages.UpdatedBody);
+        }
+    }
+
+    // after an update the previous copy is still quitting for a moment: wait for it to let go
+    private bool AcquireInstance(bool waitForPrevious)
+    {
+        var deadline = DateTimeOffset.UtcNow + AppConstants.Update.RestartWait;
+        while (true)
+        {
+            _instance = new Mutex(initiallyOwned: true, InstanceMutexName, out var isFirstInstance);
+            if (isFirstInstance || !waitForPrevious || DateTimeOffset.UtcNow >= deadline)
+            {
+                return isFirstInstance;
+            }
+            _instance.Dispose();
+            Thread.Sleep(AppConstants.Update.RestartPollInterval);
+        }
+    }
+
+    private void CheckForUpdates() => _ = CheckForUpdatesAsync();
+
+    private async Task CheckForUpdatesAsync()
+    {
+        if (_isUpdating || _tray is not { } tray)
+        {
+            return;
+        }
+        _isUpdating = true;
+        try
+        {
+            var (newer, isReachable) = await Updater.CheckAsync();
+            if (!isReachable)
+            {
+                tray.ShowBalloon(UserMessages.UpdateUnreachableTitle, UserMessages.UpdateUnreachableBody);
+                return;
+            }
+            if (newer is null)
+            {
+                tray.ShowBalloon(UserMessages.UpToDateTitle, $"You have the newest version ({Updater.CurrentVersion}).");
+                return;
+            }
+            var answer = MessageBox.Show(
+                $"Murmur {newer.Version} is available (you have {Updater.CurrentVersion}). Update now? Murmur restarts, "
+                + "your keys, settings and history stay.",
+                UserMessages.UpdateAvailableTitle,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.Yes);
+            if (answer != MessageBoxResult.Yes)
+            {
+                return;
+            }
+            tray.ShowBalloon(UserMessages.UpdateDownloadingTitle, UserMessages.UpdateDownloadingBody);
+            if (!await Updater.InstallAsync(newer))
+            {
+                tray.ShowBalloon(UserMessages.UpdateFailedTitle, UserMessages.UpdateFailedBody);
+                return;
+            }
+            // let go of the hook, the mic and the single-instance lock before the new copy starts
+            Dispose();
+            Updater.StartNewVersion();
+            Shutdown();
+        }
+        finally
+        {
+            _isUpdating = false;
         }
     }
 

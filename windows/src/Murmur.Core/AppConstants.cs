@@ -81,6 +81,28 @@ public static class AppConstants
         /// <summary>The clipboard can be held open by another app for a moment; retry this often.</summary>
         public const int ClipboardAttempts = 5;
         public static readonly TimeSpan ClipboardRetryDelay = TimeSpan.FromMilliseconds(50);
+        /// <summary>
+        /// Time a Chromium app (Chrome, Edge, Teams, other WebView2 apps) gets to build its
+        /// accessibility tree after Murmur first asks for it.
+        /// </summary>
+        public static readonly TimeSpan AccessibilityWarmupDelay = TimeSpan.FromMilliseconds(250);
+    }
+
+    public static class Update
+    {
+        /// <summary>The repo's releases (public, so no token needed).</summary>
+        public static readonly Uri ReleasesUrl = new("https://api.github.com/repos/qpxv/murmur/releases");
+        /// <summary>Only tags with this prefix are windows releases (the repo may get others).</summary>
+        public const string TagPrefix = "windows-v";
+        public const string AssetName = "Murmur.exe";
+        /// <summary>GitHub's API refuses requests without a user agent.</summary>
+        public const string UserAgent = "Murmur-Updater";
+        /// <summary>The exe is about 80 MB.</summary>
+        public static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(5);
+        /// <summary>Passed to the new exe, so it waits for the old one to quit before starting.</summary>
+        public const string RestartArgument = "--after-update";
+        public static readonly TimeSpan RestartWait = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan RestartPollInterval = TimeSpan.FromMilliseconds(200);
     }
 
     public static class Overlay

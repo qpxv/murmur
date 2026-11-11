@@ -88,7 +88,10 @@ when Murmur started, Murmur turns it off once.
 1. **Download:** GitHub (signed in, in the browser) → **Releases** → latest `windows-v…` →
    `Murmur.exe`. Builds between releases: **Actions** → latest **windows** run → **Murmur-windows**.
 2. **Put it somewhere it stays**, e.g. `%LOCALAPPDATA%\Programs\Murmur\Murmur.exe` (not Downloads),
-   so "Start with Windows" keeps pointing at it. Replace the file there for updates (quit first).
+   so "Start with Windows" keeps pointing at it. For Windows search to find it, put a shortcut to it
+   in `%APPDATA%\Microsoft\Windows\Start Menu\Programs`.
+   **Updates:** tray icon → **Check for updates…** downloads the new release, swaps the exe and
+   restarts Murmur. Keys, settings and history stay.
 3. **First start:** double-click it. If SmartScreen warns: **More info → Run anyway**. It's one
    self-contained file, nothing to install; the tray icon (bottom right, maybe behind **^**) is
    Murmur. The window opens on **Keys & Startup**.

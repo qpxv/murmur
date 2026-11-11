@@ -138,6 +138,14 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
 - **Paste:** UI Automation always off the UI thread (it deadlocks on our own windows otherwise).
   Input = Edit/Document, a writable value pattern, or a text pattern (terminals), unless the value
   is read-only (web pages). Logs the focused element's control type and class, never its text.
+  Chromium apps (Chrome, Edge, Teams, WebView2) build their UIA tree only once asked, so when the
+  first look finds no input, it waits `Paste.AccessibilityWarmupDelay` and looks once more.
+- **Updates:** tray → "Check for updates…" (also in Keys & Startup). Reads the public repo's
+  releases (`windows-v*` tags only), downloads `Murmur.exe` next to the running one, checks GitHub's
+  sha256, renames the running exe to `.old` (Windows allows renaming a running exe, not
+  overwriting it), moves the new one in and starts it with `--after-update`, which waits for the
+  old copy's single-instance mutex. The next start deletes the `.old`. Never checks on its own.
+  A release = bump `<Version>` in `Murmur.App.csproj`, push, then tag `windows-v<version>`.
 - **Cleanup:** one `ClaudeCleaner` (SDK client) is kept across dictations while key and options
   stay the same, so its connection stays warm. `StopReason.Raw()` is the wire value.
 - **Storage:** `%LOCALAPPDATA%\Murmur`: `settings.json`, `history.json` (an unreadable one is moved

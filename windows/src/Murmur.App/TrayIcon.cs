@@ -15,7 +15,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _startWithWindows;
     private readonly ToolStripMenuItem _hint;
 
-    public TrayIcon(Action openWindow, Action copyDiagnostics, Action quit)
+    public TrayIcon(Action openWindow, Action checkForUpdates, Action copyDiagnostics, Action quit)
     {
         _hint = new ToolStripMenuItem(HintText(isHotkeyActive: true)) { Enabled = false };
         _startWithWindows = new ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
@@ -27,6 +27,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Open Murmur…", image: null, (_, _) => openWindow()));
         menu.Items.Add(_startWithWindows);
+        menu.Items.Add(new ToolStripMenuItem("Check for updates…", image: null, (_, _) => checkForUpdates()));
         menu.Items.Add(new ToolStripMenuItem("Copy diagnostics", image: null, (_, _) => copyDiagnostics()));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Quit Murmur", image: null, (_, _) => quit()));

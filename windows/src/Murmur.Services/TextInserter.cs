@@ -23,8 +23,7 @@ public static partial class TextInserter
     /// </summary>
     public static async Task<Outcome> InsertAsync(string text)
     {
-        // ui automation runs off the ui thread: asking our own windows from it would deadlock
-        var input = await Task.Run(FocusedTextInput);
+        var input = await FocusedTextInputAsync();
         if (input is null)
         {
             SetClipboard(text);
@@ -69,6 +68,22 @@ public static partial class TextInserter
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Chromium apps (Chrome, Edge, Teams and other WebView2 apps) build their accessibility tree
+    /// only once a client asks for it, so the first look at a freshly started one finds no text
+    /// input. Asking is what starts the build; a moment later the focused field is there.
+    /// </summary>
+    private static async Task<AutomationElement?> FocusedTextInputAsync()
+    {
+        // ui automation runs off the ui thread: asking our own windows from it would deadlock
+        if (await Task.Run(FocusedTextInput) is { } input)
+        {
+            return input;
+        }
+        await Task.Delay(AppConstants.Paste.AccessibilityWarmupDelay);
+        return await Task.Run(FocusedTextInput);
     }
 
     private static AutomationElement? FocusedTextInput()

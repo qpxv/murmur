@@ -8,9 +8,11 @@ namespace Murmur.App.Panes;
 /// <param name="Sync">Shared stats across devices.</param>
 /// <param name="Navigate">Switches the window to another pane (e.g. "Add key" jumps to Keys).</param>
 /// <param name="CopyDiagnostics">Puts the diagnostics report on the clipboard.</param>
+/// <param name="CheckForUpdates">Looks for a newer release and offers to install it.</param>
 public sealed record AppServices(
     SettingsStore Settings,
     HistoryStore History,
     StatsSyncController Sync,
     Action<Pane> Navigate,
-    Action CopyDiagnostics);
+    Action CopyDiagnostics,
+    Action CheckForUpdates);

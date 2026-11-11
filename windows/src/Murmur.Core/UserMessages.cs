@@ -9,4 +9,14 @@ public static class UserMessages
     public const string HookFailedBody = "Murmur couldn't watch the keyboard. Copy diagnostics from the tray menu and send them over.";
     public const string DiagnosticsCopiedTitle = "Diagnostics copied";
     public const string DiagnosticsCopiedBody = "Paste them into the chat.";
+    public const string UpToDateTitle = "Murmur is up to date";
+    public const string UpdateUnreachableTitle = "Couldn't check for updates";
+    public const string UpdateUnreachableBody = "GitHub didn't answer. Try again later.";
+    public const string UpdateAvailableTitle = "Update Murmur";
+    public const string UpdateDownloadingTitle = "Downloading the update";
+    public const string UpdateDownloadingBody = "Murmur restarts by itself when it's done.";
+    public const string UpdateFailedTitle = "The update didn't work";
+    public const string UpdatedTitle = "Murmur updated";
+    public const string UpdatedBody = "Your keys, settings and history are unchanged.";
+    public const string UpdateFailedBody = "Murmur is unchanged. Copy diagnostics from the tray and send them over.";
 }
