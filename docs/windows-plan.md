@@ -1,8 +1,7 @@
 # Plan: Murmur for Windows (work laptop)
 
-Status: **approved, not started.** Start with phase 1 when the user says "let's implement the
-Windows version". The user works from home on Wednesday mornings (from 06:30) and tests on the
-laptop there.
+Status: **in progress.** Phase 1 built and pushed (2026-11-11), waiting for the first test on the
+laptop. The user works from home on Wednesday mornings (from 06:30) and tests on the laptop there.
 
 ## Context
 

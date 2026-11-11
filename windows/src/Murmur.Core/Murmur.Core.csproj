@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- pure logic and wire formats, no windows apis: builds and tests on any os -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Murmur.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- the same files the mac app reads, so both apps share one prompt and one config -->
+    <EmbeddedResource Include="../../../shared/config.json" LogicalName="Murmur.Shared.config.json" />
+    <EmbeddedResource Include="../../../shared/cleanup-prompt.json" LogicalName="Murmur.Shared.cleanup-prompt.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Murmur.Core.Tests" />
+  </ItemGroup>
+</Project>

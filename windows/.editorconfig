@@ -1,0 +1,88 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.{csproj,props,slnx,xml,xaml,json,yml}]
+indent_size = 2
+
+[*.cs]
+# style, checked by `dotnet format --verify-no-changes` and the build
+csharp_style_namespace_declarations = file_scoped:error
+csharp_style_var_for_built_in_types = true:error
+csharp_style_var_when_type_is_apparent = true:error
+csharp_style_var_elsewhere = true:error
+csharp_prefer_braces = true:error
+csharp_style_expression_bodied_methods = when_on_single_line:silent
+csharp_style_prefer_primary_constructors = true:suggestion
+csharp_using_directive_placement = outside_namespace:error
+dotnet_sort_system_directives_first = true
+dotnet_style_qualification_for_field = false:error
+dotnet_style_qualification_for_property = false:error
+dotnet_style_qualification_for_method = false:error
+dotnet_style_qualification_for_event = false:error
+dotnet_style_readonly_field = true:error
+dotnet_style_prefer_conditional_expression_over_return = false:silent
+dotnet_style_prefer_conditional_expression_over_assignment = false:silent
+
+# unused usings and members
+dotnet_diagnostic.IDE0005.severity = error
+dotnet_diagnostic.IDE0051.severity = error
+dotnet_diagnostic.IDE0052.severity = error
+dotnet_diagnostic.IDE0060.severity = error
+
+# private fields are _camelCase, constants and statics PascalCase
+dotnet_naming_rule.private_fields.symbols = private_fields
+dotnet_naming_rule.private_fields.style = underscore_camel
+dotnet_naming_rule.private_fields.severity = error
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_fields.required_modifiers =
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_rule.private_static_readonly.symbols = private_static_readonly
+dotnet_naming_rule.private_static_readonly.style = pascal
+dotnet_naming_rule.private_static_readonly.severity = error
+dotnet_naming_symbols.private_static_readonly.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly.required_modifiers = static, readonly
+dotnet_naming_rule.constants.symbols = constants
+dotnet_naming_rule.constants.style = pascal
+dotnet_naming_rule.constants.severity = error
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_style.pascal.capitalization = pascal_case
+# order matters: the more specific rules above win
+dotnet_naming_rule.private_static_readonly.priority = 1
+dotnet_naming_rule.constants.priority = 0
+dotnet_naming_rule.private_fields.priority = 2
+
+# analyzer rules that don't fit this app (everything else stays an error)
+# the app is english only, there are no resource files to localize into
+dotnet_diagnostic.CA1303.severity = none
+# ConfigureAwait(false) is wrong in wpf code that resumes on the ui thread
+dotnet_diagnostic.CA2007.severity = none
+# a single-user desktop app: no public api surface for these to protect
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1062.severity = none
+# messages are plain strings shown in our own ui, not formatted for a culture
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1307.severity = none
+dotnet_diagnostic.CA1309.severity = none
+dotnet_diagnostic.CA1310.severity = none
+dotnet_diagnostic.CA1311.severity = none
+# nested types group the constants the same way the mac's AppConstants does
+dotnet_diagnostic.CA1034.severity = none
+# our own small log writer, not Microsoft.Extensions.Logging
+dotnet_diagnostic.CA1848.severity = none
+
+[tests/**.cs]
+# tests spell out expected values inline and name methods as sentences
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.CA2000.severity = none

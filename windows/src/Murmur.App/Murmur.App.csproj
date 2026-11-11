@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- wpf glue: tray icon, overlay pill, main window, dictation controller -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>Murmur.App</RootNamespace>
+    <AssemblyName>Murmur</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <!-- only for NotifyIcon (tray icon and its balloons); wpf has no tray icon of its own -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon>Murmur.ico</ApplicationIcon>
+    <Product>Murmur</Product>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Murmur.ico" LogicalName="Murmur.ico" />
+    <!-- the sdk only treats a file named App.xaml as the application by default -->
+    <Page Remove="MurmurApp.xaml" />
+    <ApplicationDefinition Include="MurmurApp.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- wpf leaves System.IO out of the implicit usings, winforms adds names that clash with wpf -->
+    <Using Include="System.IO" />
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Murmur.Core/Murmur.Core.csproj" />
+    <ProjectReference Include="../Murmur.Services/Murmur.Services.csproj" />
+  </ItemGroup>
+</Project>

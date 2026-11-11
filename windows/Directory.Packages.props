@@ -1,0 +1,8 @@
+<Project>
+  <!-- every package version lives here, once -->
+  <ItemGroup>
+    <PackageVersion Include="Anthropic" Version="13.8.0" />
+    <PackageVersion Include="NAudio.Wasapi" Version="3.3.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
+  </ItemGroup>
+</Project>

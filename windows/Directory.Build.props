@@ -1,0 +1,19 @@
+<Project>
+  <!-- strict settings for every project: a warning fails the build, locally and in ci -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- needed so unused usings (IDE0005) are reported at build time; doc comments stay optional -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- lets the mac build the windows-only projects -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- windows integrations: keyboard hook, audio, websocket, claude, paste, credentials, storage -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>Murmur.Services</RootNamespace>
+    <!-- ui automation (System.Windows.Automation) and the clipboard come with wpf -->
+    <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Anthropic" />
+    <PackageReference Include="NAudio.Wasapi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- wpf leaves System.IO out of the implicit usings (Path clashes with Shapes.Path) -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Murmur.Core/Murmur.Core.csproj" />
+  </ItemGroup>
+</Project>

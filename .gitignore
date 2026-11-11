@@ -3,3 +3,8 @@
 .swiftpm/
 build/
 *.xcodeproj/xcuserdata/
+
+# windows app (dotnet)
+windows/**/bin/
+windows/**/obj/
+windows/publish/

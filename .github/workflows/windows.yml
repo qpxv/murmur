@@ -1,0 +1,72 @@
+# builds the windows app on a windows runner: gates, then one self-contained Murmur.exe.
+# every push that touches it uploads the exe as a run artifact; a windows-v* tag also publishes
+# it as a github release (the tag must match <Version> in Murmur.App.csproj).
+name: windows
+
+on:
+  push:
+    branches: [main]
+    tags: ["windows-v*"]
+    # path filters don't apply to tag pushes, so a release tag always builds
+    paths:
+      - "windows/**"
+      - "shared/**"
+      - ".github/workflows/windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: windows/global.json
+
+      - name: Format
+        run: dotnet format Murmur.slnx --verify-no-changes
+
+      - name: Build
+        run: dotnet build Murmur.slnx -c Release -nologo
+
+      - name: Test
+        run: dotnet test --solution Murmur.slnx -c Release --no-build
+
+      - name: Check the release tag matches the version
+        if: startsWith(github.ref, 'refs/tags/windows-v')
+        run: |
+          version="$(dotnet msbuild src/Murmur.App/Murmur.App.csproj -getProperty:Version)"
+          tag="${GITHUB_REF_NAME#windows-v}"
+          if [[ "$version" != "$tag" ]]; then
+            echo "tag $GITHUB_REF_NAME doesn't match <Version>$version</Version> in Murmur.App.csproj"
+            exit 1
+          fi
+
+      - name: Publish
+        run: >
+          dotnet publish src/Murmur.App/Murmur.App.csproj -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Murmur-windows
+          path: windows/publish/Murmur.exe
+          if-no-files-found: error
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/windows-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" publish/Murmur.exe
+          --title "Murmur for Windows ${GITHUB_REF_NAME#windows-v}"
+          --notes "Download Murmur.exe and run it. See the README's Windows section for first start."
