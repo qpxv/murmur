@@ -13,9 +13,13 @@ public static partial class SyntheticKeys
     private const ushort CapsLockKey = 0x14;
     private const int ToggledBit = 1;
 
+    // autohotkey's KEY_IGNORE marker (keyboard_mouse.h): its hook lets keys carrying it through
+    // untouched, so a remap like ctrl -> win can't turn our ctrl+v into win+v. windows ignores it.
+    private const long AutoHotkeyIgnoreMarker = 0xFFC3D44F;
+
     /// <summary>
-    /// Caps Lock can't be switched by the user while Murmur swallows it, so if it was on when
-    /// Murmur started, turn it off once (otherwise everything would be typed in capitals).
+    /// Caps Lock can't be switched by the user while it's the dictation key, so if it is on (it was
+    /// on when Murmur started, or got switched while the hook couldn't see it), turn it off.
     /// </summary>
     public static void TurnOffCapsLock()
     {
@@ -33,7 +37,13 @@ public static partial class SyntheticKeys
     private static Input Key(ushort key, bool isUp) => new()
     {
         Type = KeyboardInputType,
-        Keyboard = new KeyboardInput { VirtualKey = key, Flags = isUp ? KeyUpFlag : 0 },
+        Keyboard = new KeyboardInput
+        {
+            VirtualKey = key,
+            Flags = isUp ? KeyUpFlag : 0,
+            // only overflows on 32-bit, which murmur isn't built for
+            ExtraInfo = unchecked((nint)AutoHotkeyIgnoreMarker),
+        },
     };
 
     private static void Send(Input[] inputs)
