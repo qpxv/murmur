@@ -5,8 +5,8 @@ Deepgram, finished chunks get cleaned up by Claude while still speaking, and the
 pasted where the user is when they stop. The user does not read or write code here: Claude
 owns architecture, quality and maintenance.
 
-**Windows version:** approved plan in [`docs/windows-plan.md`](docs/windows-plan.md), not started
-yet. Follow it when the user asks for the Windows version.
+**Windows version:** in [`windows/`](windows), built per [`docs/windows-plan.md`](docs/windows-plan.md)
+(all four phases written, being tested on the laptop). See "Windows" below.
 
 ## Behaviour
 
@@ -76,6 +76,8 @@ yet. Follow it when the user asks for the Windows version.
 ## Layout
 
 ```
+shared/                  config.json, cleanup-prompt.json: read by the mac and the windows app
+windows/                 the windows app (see "Windows")
 Sources/MurmurCore/      pure logic + wire types. Foundation/CoreGraphics only. unit-tested.
 Sources/MurmurServices/  system integrations (audio, network, keychain, paste, hotkey, storage)
 Sources/MurmurApp/       SwiftUI + AppKit glue: menu bar, overlay, main window, controller
@@ -91,6 +93,11 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
 
 ## Single source of truth
 
+- What both apps must agree on lives in `shared/`: `config.json` (model, API version, beta, effort,
+  max tokens, chunk sizes, context words, timeouts, Deepgram URL/model/language) and
+  `cleanup-prompt.json` (every prompt text). The Mac bundles them as a SwiftPM resource through the
+  `Sources/MurmurCore/Shared` symlink (`SharedFiles.swift`; `bundle.sh` copies the resource bundle
+  into the app); Windows embeds them. `AppConstants` re-exports them. Edit the JSON, never a copy.
 - Numbers, timings, model IDs, URLs: `MurmurCore/AppConstants.swift`.
 - Visual tokens (spacing, radii, durations): `MurmurApp/Theme.swift` (added with the overlay).
 - User settings: one `Settings` struct, persisted by `SettingsStore`. New fields decode with a
@@ -110,6 +117,33 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
   Support/dev.benwinzer.murmur/history.store "SELECT ZRAWTEXT, ZTEXT FROM ZDICTATIONRECORD ORDER BY
   ZDATE DESC LIMIT 1"`. Only read it when the user asks you to look at a dictation.
 - New Mac setup: follow `README.md` → "Set up on a new Mac".
+
+## Windows
+
+- **C# / .NET 10 + WPF** (Fluent theme, `ThemeMode="System"`), solution `windows/Murmur.slnx`:
+  `Murmur.Core` (net10.0, pure, tested), `Murmur.Services` (Windows integrations), `Murmur.App`
+  (WPF), `tests/Murmur.Core.Tests` (xUnit v3). Layers point one way, enforced by project references.
+- **Strict:** `Directory.Build.props` (warnings are errors, analyzers `latest-all`, nullable),
+  `.editorconfig` (the few rules turned off each say why), package versions only in
+  `Directory.Packages.props`. Dependencies: NAudio (`NAudio.Wasapi`), Anthropic (official SDK).
+- **Builds:** `scripts/windows-gates.sh` on the Mac (SDK in `~/.dotnet`, user-local). GitHub
+  Actions (`.github/workflows/windows.yml`) runs the gates on a Windows runner and publishes one
+  self-contained `Murmur.exe` per push; a `windows-v*` tag matching `<Version>` makes a Release.
+  `.gitattributes` forces LF (the runner would check out CRLF and `dotnet format` fails).
+- **Hotkey:** Caps Lock through a low-level keyboard hook on the UI thread (`KeyboardHook`). The
+  hook only decides and swallows; work is dispatched after it returns (Windows drops slow hooks).
+  Caps Lock is always swallowed; injected keys (our Ctrl+V) pass through.
+- **Audio:** `WasapiRecorderBuilder` (NAudio 3; `WasapiCapture` is obsolete) in the device's mix
+  format, converted to 16 kHz mono by NAudio's WDL resampler, not the engine's auto-convert.
+- **Paste:** UI Automation always off the UI thread (it deadlocks on our own windows otherwise).
+  Input = Edit/Document, a writable value pattern, or a text pattern (terminals), unless the value
+  is read-only (web pages). Logs the focused element's control type and class, never its text.
+- **Cleanup:** one `ClaudeCleaner` (SDK client) is kept across dictations while key and options
+  stay the same, so its connection stays warm. `StopReason.Raw()` is the wire value.
+- **Storage:** `%LOCALAPPDATA%\Murmur`: `settings.json`, `history.json` (an unreadable one is moved
+  aside, never overwritten), `murmur.log` (trimmed at 1 MB), `mic-restore.json`. Secrets in the
+  Credential Manager (`Murmur/...` targets). Start with Windows = HKCU Run key.
+- **Remote debugging:** Claude can't run it. The user sends **Copy diagnostics** (tray or Keys).
 
 ## Toolchain
 

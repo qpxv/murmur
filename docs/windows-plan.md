@@ -1,7 +1,13 @@
 # Plan: Murmur for Windows (work laptop)
 
-Status: **in progress.** Phase 1 built and pushed (2026-11-11), waiting for the first test on the
-laptop. The user works from home on Wednesday mornings (from 06:30) and tests on the laptop there.
+Status: **all four phases written and pushed (2026-11-11), green in CI, untested on Windows.**
+The user agreed to build all phases in one go while at work and test afterwards on the laptop.
+Next: the user's test results (Copy diagnostics). The user works from home on Wednesday mornings
+(from 06:30) and tests on the laptop there.
+
+Deviations from the plan below, decided while building: the solution is `Murmur.slnx` (the .NET 10
+format); the exe is `Murmur.exe`; the Mac's "Keys & Permissions" pane is "Keys & Startup" (Windows
+has no permission prompts to list, only the microphone privacy switch, linked from there).
 
 ## Context
 

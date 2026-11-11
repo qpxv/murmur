@@ -1,7 +1,8 @@
 # Murmur
 
 A personal macOS dictation app that lives in the menu bar. Hold **fn**, talk, let go, and the
-text appears wherever your cursor is: fast, accurate, and cleaned up by Claude.
+text appears wherever your cursor is: fast, accurate, and cleaned up by Claude. There is a
+[Windows version](#windows) too.
 
 - **Speech to text:** Deepgram `nova-3`, streamed live while you talk (you never see the raw text).
 - **Cleanup:** Claude Opus 5.5 fixes misheard words (using context and your vocabulary),
@@ -68,13 +69,45 @@ Written so you can hand it to Claude Code: *"set up Murmur from the README"*. St
     Only numbers are shared (time, words, seconds spoken), never what you said. Use the same
     connection string on every device.
 
+## Windows
+
+The same app for Windows (the work laptop), in [`windows/`](windows). **Caps Lock** takes fn's
+place, since Windows can't see fn:
+
+| You do | What happens |
+|---|---|
+| Hold **Caps Lock** | Records while held, pastes on release |
+| Hold **Caps Lock**, press **space** | Locks recording, hands free |
+| **Caps Lock** (while locked) | Stops and pastes |
+| **Caps Lock** + any other key | Cancelled |
+| Tap **Caps Lock** briefly | Ignored |
+
+Caps Lock no longer switches to capitals while Murmur runs (Shift still types them). If it was on
+when Murmur started, Murmur turns it off once.
+
+1. **Download:** GitHub (signed in, in the browser) → **Releases** → latest `windows-v…` →
+   `Murmur.exe`. Builds between releases: **Actions** → latest **windows** run → **Murmur-windows**.
+2. **Put it somewhere it stays**, e.g. `%LOCALAPPDATA%\Programs\Murmur\Murmur.exe` (not Downloads),
+   so "Start with Windows" keeps pointing at it. Replace the file there for updates (quit first).
+3. **First start:** double-click it. If SmartScreen warns: **More info → Run anyway**. It's one
+   self-contained file, nothing to install; the tray icon (bottom right, maybe behind **^**) is
+   Murmur. The window opens on **Keys & Startup**.
+4. **Keys:** paste the Deepgram and Claude keys (and the Neon URL for shared stats). They go to the
+   Windows Credential Manager, never into a file.
+5. **Test:** hold Caps Lock in Notepad and talk. With nothing focused, the text goes to the
+   clipboard and a tray message says so.
+6. **Something wrong?** Tray icon → **Copy diagnostics**, paste it into the chat. The log is at
+   `%LOCALAPPDATA%\Murmur\murmur.log` (timings and errors, never your text or keys).
+
 ## Development
 
 | Command | What it does |
 |---|---|
 | `scripts/gates.sh` | Format check, SwiftLint (strict), release build (warnings are errors), tests |
 | `scripts/bundle.sh` | Builds and signs `build/Murmur.app` |
-| `scripts/make-icon.sh` | Regenerates `Resources/AppIcon.icns` |
+| `scripts/make-icon.sh` | Regenerates `Resources/AppIcon.icns` (then `scripts/make-windows-icon.sh`) |
+| `scripts/windows-gates.sh` | Windows app: `dotnet format` check, build (warnings are errors), tests. Runs on the Mac |
+| `git tag windows-v0.1.0 && git push origin windows-v0.1.0` | Publishes `Murmur.exe` as a GitHub Release (tag = `<Version>` in `Murmur.App.csproj`) |
 | `/usr/bin/log show --last 10m --predicate 'subsystem == "dev.benwinzer.murmur"'` | App logs (timings, errors; never your text) |
 
 After a rebuild: quit Murmur (menu → Quit), run `scripts/bundle.sh`, then `open build/Murmur.app`.
