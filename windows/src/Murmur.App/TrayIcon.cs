@@ -19,7 +19,8 @@ public sealed class TrayIcon : IDisposable
     {
         _hint = new ToolStripMenuItem(HintText(isHotkeyActive: true)) { Enabled = false };
         _startWithWindows = new ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
-        _startWithWindows.CheckedChanged += (_, _) => StartWithWindows.SetEnabled(_startWithWindows.Checked);
+        // click, not CheckedChanged: re-reading the state when the menu opens must not write it back
+        _startWithWindows.Click += (_, _) => StartWithWindows.SetEnabled(_startWithWindows.Checked);
 
         var menu = new ContextMenuStrip();
         menu.Items.Add(_hint);

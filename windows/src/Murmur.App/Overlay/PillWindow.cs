@@ -31,6 +31,8 @@ public sealed class PillWindow : Window
     public PillWindow(SettingsStore settings)
     {
         _settings = settings;
+        // an empty style keeps the fluent theme's window style (backdrop, chrome) off the transparent overlay
+        Style = new Style(typeof(Window));
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         Background = Brushes.Transparent;

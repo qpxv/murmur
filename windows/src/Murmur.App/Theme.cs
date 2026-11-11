@@ -25,7 +25,6 @@ public static class Theme
         public const double SpinnerSize = 14;
         public const double SpinnerStroke = 2;
         public static readonly Duration SpinnerTurn = new(TimeSpan.FromMilliseconds(800));
-        public static readonly Duration MorphDuration = new(TimeSpan.FromMilliseconds(280));
 
         // dynamic island look: near-solid black, a faint edge so it still reads on dark wallpapers
         private const byte BackgroundAlpha = 240;
@@ -48,12 +47,73 @@ public static class Theme
         public const double MaxBarHeight = 15;
     }
 
+    public static class Window
+    {
+        public const double Width = 920;
+        public const double Height = 660;
+        public const double MinWidth = 780;
+        public const double MinHeight = 540;
+        public const double SidebarWidth = 210;
+        public const double SidebarItemPadding = 8;
+        public const double ContentPadding = 24;
+        public const double SectionSpacing = 24;
+        public const double RowSpacing = 10;
+        public const double LabelGap = 16;
+        public const double TitleFontSize = 26;
+        public const double HeaderFontSize = 14;
+        public const double CaptionFontSize = 12;
+        public const double CardPadding = 16;
+        public const double CardCornerRadius = 8;
+        /// <summary>Dictations on Home.</summary>
+        public const int RecentCount = 5;
+        /// <summary>History renders this many rows at most; search finds older ones.</summary>
+        public const int HistoryPageSize = 200;
+        /// <summary>Height of a dictation preview on Home (about three lines); History shows it all.</summary>
+        public const double PreviewHeight = 60;
+        public const double FieldWidth = 320;
+        public const double NarrowFieldWidth = 56;
+    }
+
+    public static class StatCard
+    {
+        public const double MinWidth = 170;
+        public const double Spacing = 12;
+        public const double ValueFontSize = 26;
+    }
+
+    public static class Typing
+    {
+        public const int MinWordsPerMinute = 10;
+        public const int MaxWordsPerMinute = 250;
+    }
+
+    public static class PositionPicker
+    {
+        public const double ScreenWidth = 300;
+        public const double ScreenHeight = 186;
+        public const double ScreenCornerRadius = 12;
+        public const double CellSpacing = 6;
+        public const double PillWidth = 46;
+        public const double PillHeight = 16;
+        public const double DotSize = 6;
+        public const double IdleOpacity = 0.25;
+    }
+
     public static class Icons
     {
         /// <summary>Segoe Fluent Icons on Windows 11, Segoe MDL2 Assets on Windows 10 (same code points).</summary>
         public static readonly FontFamily Font = new("Segoe Fluent Icons, Segoe MDL2 Assets");
-        public const string Lock = "";
-        public const string Warning = "";
+        public const string Lock = "\uE72E";
+        public const string Warning = "\uE7BA";
+        public const string Home = "\uE80F";
+        public const string History = "\uE81C";
+        public const string Vocabulary = "\uE82D";
+        public const string Cleanup = "\uE70F";
+        public const string Microphone = "\uE720";
+        public const string Keyboard = "\uE765";
+        public const string Keys = "\uE8D7";
+        public const string Copy = "\uE8C8";
+        public const string Remove = "\uE738";
     }
 
     private static SolidColorBrush Frozen(Color color)

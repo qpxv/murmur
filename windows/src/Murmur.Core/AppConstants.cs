@@ -19,7 +19,6 @@ public static class AppConstants
         /// <summary>What Deepgram receives: 16 kHz mono 16-bit PCM, plenty for speech.</summary>
         public const int SampleRate = 16_000;
         public const int ChannelCount = 1;
-        public const int BitsPerSample = 16;
         /// <summary>Capture buffer length: short enough for a responsive voice bar.</summary>
         public const int BufferMilliseconds = 20;
         /// <summary>Loudness (dBFS) that maps to an empty / full voice bar.</summary>
@@ -40,8 +39,6 @@ public static class AppConstants
         /// <summary>How long to wait for the last words after asking Deepgram to finalize.</summary>
         public static readonly TimeSpan FinalizeTimeout = TimeSpan.FromSeconds(Shared.FinalizeTimeoutSeconds);
         public static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(10);
-        /// <summary>Deepgram's WebSocket close code for a rejected key.</summary>
-        public const int UnauthorizedCloseCode = 1008;
     }
 
     public static class Cleanup
@@ -81,8 +78,6 @@ public static class AppConstants
     {
         /// <summary>Time the target app gets to read the clipboard before the old content returns.</summary>
         public static readonly TimeSpan ClipboardRestoreDelay = TimeSpan.FromMilliseconds(800);
-        /// <summary>Time the target app gets to apply Ctrl+V before its length is read again.</summary>
-        public static readonly TimeSpan PasteSettleDelay = TimeSpan.FromMilliseconds(150);
         /// <summary>The clipboard can be held open by another app for a moment; retry this often.</summary>
         public const int ClipboardAttempts = 5;
         public static readonly TimeSpan ClipboardRetryDelay = TimeSpan.FromMilliseconds(50);
