@@ -1,0 +1,5 @@
+# lf everywhere, also on the windows ci runner (dotnet format checks line endings)
+* text=auto eol=lf
+*.ico binary
+*.icns binary
+*.png binary
