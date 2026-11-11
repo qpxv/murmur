@@ -9,6 +9,8 @@ public enum DictationError
     MicrophoneUnavailable,
     ConnectionFailed,
     NothingHeard,
+    /// <summary>A bug: the details are in the log.</summary>
+    Unexpected,
 }
 
 public static class DictationErrors
@@ -21,6 +23,7 @@ public static class DictationErrors
         DictationError.MicrophoneUnavailable => "Microphone couldn't start",
         DictationError.ConnectionFailed => "Couldn't reach Deepgram",
         DictationError.NothingHeard => "Didn't catch anything",
+        DictationError.Unexpected => "Something went wrong, copy diagnostics from the tray",
         _ => throw new ArgumentOutOfRangeException(nameof(error), error, null),
     };
 }

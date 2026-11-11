@@ -18,14 +18,17 @@ public static class TextInputRule
     /// <param name="isValueReadOnly">
     /// The element's value pattern <c>IsReadOnly</c>; <c>null</c> when it has no value pattern.
     /// </param>
-    public static bool IsTextInput(ControlKind? kind, bool? isValueReadOnly)
+    /// <param name="hasTextPattern">
+    /// Whether it exposes the text pattern (a caret and text), like terminals and rich editors do.
+    /// </param>
+    public static bool IsTextInput(ControlKind? kind, bool? isValueReadOnly, bool hasTextPattern)
     {
+        // a read-only value is a web page or a label, whatever its control type says
         if (kind is null || isValueReadOnly == true)
         {
             return false;
         }
-        // custom editors (and web contenteditable) aren't edit controls but still expose a writable value
-        return kind is ControlKind.Edit or ControlKind.Document || isValueReadOnly == false;
+        return kind is ControlKind.Edit or ControlKind.Document || isValueReadOnly == false || hasTextPattern;
     }
 
     /// <summary>

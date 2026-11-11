@@ -7,25 +7,31 @@ public class TextInputRuleTests
     [Theory]
     [InlineData(Kind.Edit)]
     [InlineData(Kind.Document)]
-    public void Edit_and_document_controls_are_inputs(Kind kind) => Assert.True(TextInputRule.IsTextInput(kind, isValueReadOnly: null));
+    public void Edit_and_document_controls_are_inputs(Kind kind) =>
+        Assert.True(TextInputRule.IsTextInput(kind, isValueReadOnly: null, hasTextPattern: false));
 
     [Fact]
     public void Writable_value_on_a_custom_control_is_input() =>
-        Assert.True(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: false));
+        Assert.True(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: false, hasTextPattern: false));
+
+    [Fact]
+    public void Terminal_with_only_a_text_pattern_is_input() =>
+        Assert.True(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: null, hasTextPattern: true));
 
     [Fact]
     public void Read_only_document_like_a_web_page_is_not_input() =>
-        Assert.False(TextInputRule.IsTextInput(Kind.Document, isValueReadOnly: true));
+        Assert.False(TextInputRule.IsTextInput(Kind.Document, isValueReadOnly: true, hasTextPattern: true));
 
     [Fact]
     public void Buttons_and_static_text_are_not_inputs()
     {
-        Assert.False(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: null));
-        Assert.False(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: true));
+        Assert.False(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: null, hasTextPattern: false));
+        Assert.False(TextInputRule.IsTextInput(Kind.Other, isValueReadOnly: true, hasTextPattern: false));
     }
 
     [Fact]
-    public void Nothing_focused_is_not_input() => Assert.False(TextInputRule.IsTextInput(null, isValueReadOnly: null));
+    public void Nothing_focused_is_not_input() =>
+        Assert.False(TextInputRule.IsTextInput(null, isValueReadOnly: null, hasTextPattern: false));
 
     [Fact]
     public void Paste_landed_when_field_grew() => Assert.True(TextInputRule.DidPasteLand(0, 42));

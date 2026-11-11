@@ -15,6 +15,7 @@ public sealed partial class MurmurApp : Application, IDisposable
     private Mutex? _instance;
     private TrayIcon? _tray;
     private PillWindow? _pill;
+    private DictationController? _dictation;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -30,9 +31,24 @@ public sealed partial class MurmurApp : Application, IDisposable
         Log.Info(Category, $"started {DiagnosticsReport.Version} on windows {Environment.OSVersion.Version}");
 
         var settings = new SettingsStore();
-        _pill = new PillWindow(settings);
-        _pill.Show();
-        _tray = new TrayIcon(openWindow: OpenWindow, copyDiagnostics: CopyDiagnostics, quit: Shutdown);
+        var dictation = new DictationController(settings, Dispatcher);
+        var pill = new PillWindow(settings);
+        var tray = new TrayIcon(openWindow: OpenWindow, copyDiagnostics: CopyDiagnostics, quit: Shutdown);
+        _dictation = dictation;
+        _pill = pill;
+        _tray = tray;
+
+        dictation.StateChanged += (_, _) => pill.Render(dictation.State);
+        dictation.LevelsChanged += (_, _) => pill.ShowLevels(dictation.Levels);
+        dictation.CopiedToClipboard += (_, _) => tray.ShowBalloon(UserMessages.CopiedTitle, UserMessages.CopiedBody);
+        pill.Show();
+
+        var isHotkeyActive = dictation.Activate();
+        tray.SetHotkeyActive(isHotkeyActive);
+        if (!isHotkeyActive)
+        {
+            tray.ShowBalloon(UserMessages.HookFailedTitle, UserMessages.HookFailedBody);
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -44,6 +60,8 @@ public sealed partial class MurmurApp : Application, IDisposable
 
     public void Dispose()
     {
+        _dictation?.Dispose();
+        _dictation = null;
         _tray?.Dispose();
         _tray = null;
         _instance?.Dispose();
@@ -57,7 +75,14 @@ public sealed partial class MurmurApp : Application, IDisposable
 
     private void CopyDiagnostics()
     {
-        var report = DiagnosticsReport.Build([new("overlay", _pill is null ? "missing" : "shown")]);
+        var report = DiagnosticsReport.Build(
+        [
+            new("caps lock hook", _dictation?.IsHotkeyActive == true ? "running" : "not running"),
+            new("state", _dictation?.State.ToString() ?? "none"),
+            new("default mic", AudioDevices.DefaultInputName()),
+            new("mics", string.Join(", ", AudioDevices.Inputs().Select(device => device.Name))),
+            new("overlay", _pill is null ? "missing" : "shown"),
+        ]);
         try
         {
             Clipboard.SetText(report);
