@@ -72,7 +72,7 @@ public sealed class AudioCapture : IDisposable
             throw new DictationException(
                 exception.HResult == AccessDenied ? DictationError.MicrophoneDenied : DictationError.MicrophoneUnavailable);
         }
-        Log.Info(Category, $"recording {recorder.WaveFormat.SampleRate} Hz, {recorder.WaveFormat.Channels} ch, {recorder.WaveFormat.Encoding}");
+        Log.Info(Category, $"recording from {device.FriendlyName}: {recorder.WaveFormat.SampleRate} Hz, {recorder.WaveFormat.Channels} ch, {recorder.WaveFormat.Encoding}");
         _recorder = recorder;
         _device = device;
     }

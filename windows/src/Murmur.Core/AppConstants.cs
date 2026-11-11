@@ -26,6 +26,11 @@ public static class AppConstants
         public const float FullScaleDecibels = -10;
         /// <summary>A sample this close to full scale (1.0) counts as clipping.</summary>
         public const float ClippingThreshold = 0.99f;
+        /// <summary>
+        /// How long the mic stays open after the hotkey is released: the end of the last word is
+        /// still in transit (bluetooth headsets add about 0.2 s), and closing at once cut it off.
+        /// </summary>
+        public static readonly TimeSpan StopTail = TimeSpan.FromMilliseconds(300);
         /// <summary>Mic volume while recording with the boost on (endpoint scalar, 0 to 1).</summary>
         public const float BoostedVolume = 1;
     }

@@ -214,15 +214,14 @@ public sealed class DictationController : IDisposable
             return;
         }
         SetState(State.Applying(HotkeyAction.Stop));
-        StopCapture();
         if (_active is not { } active)
         {
+            StopCapture();
             SetState(DictationState.Idle);
             return;
         }
         _active = null;
         var speakingSeconds = Stopwatch.GetElapsedTime(active.StartedAt).TotalSeconds;
-        Log.Info(Category, $"recording stopped after {speakingSeconds:F1} s: {_capturedBlocks} audio blocks, {_clippedBlocks} clipped");
         _ = DeliverAsync(active, speakingSeconds);
     }
 
@@ -230,6 +229,10 @@ public sealed class DictationController : IDisposable
     {
         try
         {
+            // the last word is still on its way (bluetooth delay, audio buffers): keep the mic open a moment
+            await Task.Delay(AppConstants.Audio.StopTail);
+            StopCapture();
+            Log.Info(Category, $"recording stopped after {speakingSeconds:F1} s: {_capturedBlocks} audio blocks, {_clippedBlocks} clipped");
             await dictation.Deepgram.FinishAsync();
             // every segment has reached the session once forwarding ends with the stream
             await dictation.Forwarding;
@@ -326,6 +329,11 @@ public sealed class DictationController : IDisposable
             return;
         }
         _capturedBlocks++;
+        if (_capturedBlocks == 1 && _active is { } active)
+        {
+            // a bluetooth headset switching into its headset mode shows up here as a long wait
+            Log.Info(Category, $"first audio after {Stopwatch.GetElapsedTime(active.StartedAt).TotalMilliseconds:F0} ms");
+        }
         if (measure.IsClipped)
         {
             _clippedBlocks++;

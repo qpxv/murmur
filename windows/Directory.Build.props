@@ -17,6 +17,6 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- the app's version, for every project: the update check reads it from the services assembly,
          so it must not be set on the app project alone (0.2.0 thought it was 1.0.0) -->
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 </Project>
