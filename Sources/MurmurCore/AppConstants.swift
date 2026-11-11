@@ -27,34 +27,38 @@ public enum AppConstants {
         public static let privateAggregateUIDPrefix = "CADefaultDeviceAggregate"
     }
 
+    // the values live in shared/config.json, which the windows app reads too
     public enum Deepgram {
-        public static let listenURL = "wss://api.deepgram.com/v1/listen"
-        public static let model = "nova-3"
-        public static let language = "en"
+        private static let shared = SharedFiles.config.deepgram
+        public static let listenURL = shared.listenURL
+        public static let model = shared.model
+        public static let language = shared.language
         /// How long to wait for the last words after asking Deepgram to finalize.
-        public static let finalizeTimeout: TimeInterval = 3
+        public static let finalizeTimeout: TimeInterval = shared.finalizeTimeoutSeconds
     }
 
+    // the values live in shared/config.json, which the windows app reads too
     public enum Cleanup {
-        public static let messagesURL = "https://api.anthropic.com/v1/messages"
-        public static let model = "claude-opus-5-5"
-        public static let apiVersion = "2026-10-21"
+        private static let shared = SharedFiles.config.cleanup
+        public static let messagesURL = shared.messagesURL
+        public static let model = shared.model
+        public static let apiVersion = shared.apiVersion
         /// Enables `fallbacks: "default"`: a refused request is rerouted inside the same call.
-        public static let fallbackBeta = "server-side-fallback-2026-07-01"
+        public static let fallbackBeta = shared.fallbackBeta
         /// Thinking can't be turned off on this model; low effort keeps it short.
-        public static let effort = "low"
+        public static let effort = shared.effort
         /// Generous: thinking counts against it, and a 150-word chunk needs ~250 tokens of text.
-        public static let maxTokens = 4_096
+        public static let maxTokens = shared.maxTokens
         /// A chunk closes at the next pause once it has this many words...
-        public static let minChunkWords = 40
+        public static let minChunkWords = shared.minChunkWords
         /// ...or right away at this many, pause or not.
-        public static let maxChunkWords = 150
+        public static let maxChunkWords = shared.maxChunkWords
         /// Words of the previous chunk sent along as read-only context.
-        public static let contextWords = 30
+        public static let contextWords = shared.contextWords
         /// Per request. Chunks cleaned while you speak have time; the wait after stopping is capped below.
-        public static let requestTimeout: TimeInterval = 20
+        public static let requestTimeout: TimeInterval = shared.requestTimeoutSeconds
         /// After you stop, how long to wait for cleanup before pasting raw text for unfinished chunks.
-        public static let finishTimeout: TimeInterval = 7
+        public static let finishTimeout: TimeInterval = shared.finishTimeoutSeconds
     }
 
     public enum Sync {

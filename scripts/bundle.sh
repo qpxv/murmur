@@ -22,6 +22,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/$EXECUTABLE" "$APP/Contents/MacOS/$EXECUTABLE"
 cp "$PLIST" "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# shared/ (config + cleanup prompt) as swiftpm's resource bundle; Bundle.module looks for it here
+cp -R "$BIN_DIR"/*_MurmurCore.bundle "$APP/Contents/Resources/"
 
 APPLE_DEVELOPMENT="$(security find-identity -v -p codesigning | grep -o '"Apple Development: [^"]*"' | head -n 1 | tr -d '"' || true)"
 if [[ -n "$APPLE_DEVELOPMENT" ]]; then
