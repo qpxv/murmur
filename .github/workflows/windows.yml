@@ -1,6 +1,6 @@
 # builds the windows app on a windows runner: gates, then one self-contained Murmur.exe.
 # every push that touches it uploads the exe as a run artifact; a windows-v* tag also publishes
-# it as a github release (the tag must match <Version> in Murmur.App.csproj).
+# it as a github release (the tag must match <Version> in windows/Directory.Build.props).
 name: windows
 
 on:
@@ -46,7 +46,7 @@ jobs:
           version="$(dotnet msbuild src/Murmur.App/Murmur.App.csproj -getProperty:Version)"
           tag="${GITHUB_REF_NAME#windows-v}"
           if [[ "$version" != "$tag" ]]; then
-            echo "tag $GITHUB_REF_NAME doesn't match <Version>$version</Version> in Murmur.App.csproj"
+            echo "tag $GITHUB_REF_NAME doesn't match <Version>$version</Version> in Directory.Build.props"
             exit 1
           fi
 

@@ -110,7 +110,7 @@ when Murmur started, Murmur turns it off once.
 | `scripts/bundle.sh` | Builds and signs `build/Murmur.app` |
 | `scripts/make-icon.sh` | Regenerates `Resources/AppIcon.icns` (then `scripts/make-windows-icon.sh`) |
 | `scripts/windows-gates.sh` | Windows app: `dotnet format` check, build (warnings are errors), tests. Runs on the Mac |
-| `git tag windows-v0.1.0 && git push origin windows-v0.1.0` | Publishes `Murmur.exe` as a GitHub Release (tag = `<Version>` in `Murmur.App.csproj`) |
+| `git tag windows-v0.1.0 && git push origin windows-v0.1.0` | Publishes `Murmur.exe` as a GitHub Release (tag = `<Version>` in `windows/Directory.Build.props`) |
 | `/usr/bin/log show --last 10m --predicate 'subsystem == "dev.benwinzer.murmur"'` | App logs (timings, errors; never your text) |
 
 After a rebuild: quit Murmur (menu → Quit), run `scripts/bundle.sh`, then `open build/Murmur.app`.

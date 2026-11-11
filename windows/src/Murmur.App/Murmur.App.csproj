@@ -11,7 +11,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>Murmur.ico</ApplicationIcon>
     <Product>Murmur</Product>
-    <Version>0.3.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

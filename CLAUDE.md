@@ -129,6 +129,7 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
 - **Builds:** `scripts/windows-gates.sh` on the Mac (SDK in `~/.dotnet`, user-local). GitHub
   Actions (`.github/workflows/windows.yml`) runs the gates on a Windows runner and publishes one
   self-contained `Murmur.exe` per push; a `windows-v*` tag matching `<Version>` makes a Release.
+  The version lives once, in `Directory.Build.props`, so every assembly carries it.
   `.gitattributes` forces LF (the runner would check out CRLF and `dotnet format` fails).
 - **Hotkey:** Caps Lock through a low-level keyboard hook on the UI thread (`KeyboardHook`). The
   hook only decides and swallows; work is dispatched after it returns (Windows drops slow hooks).
@@ -145,7 +146,7 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
   sha256, renames the running exe to `.old` (Windows allows renaming a running exe, not
   overwriting it), moves the new one in and starts it with `--after-update`, which waits for the
   old copy's single-instance mutex. The next start deletes the `.old`. Never checks on its own.
-  A release = bump `<Version>` in `Murmur.App.csproj`, push, then tag `windows-v<version>`.
+  A release = bump `<Version>` in `Directory.Build.props`, push, then tag `windows-v<version>`.
 - **Cleanup:** one `ClaudeCleaner` (SDK client) is kept across dictations while key and options
   stay the same, so its connection stays warm. `StopReason.Raw()` is the wire value.
 - **Storage:** `%LOCALAPPDATA%\Murmur`: `settings.json`, `history.json` (an unreadable one is moved
