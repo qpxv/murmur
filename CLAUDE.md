@@ -47,8 +47,11 @@ owns architecture, quality and maintenance.
   `Settings.cleanup` (`CleanupOptions`): three fix toggles + style casual/normal/formal; the
   system prompt is built from it by `CleanupPrompt.system(for:)`. Nothing to do (all fixes off,
   normal style) means no Claude call at all.
-- **Mic selection:** only switch the engine's device when the user picked a specific mic.
-  Forcing even the default device onto `AVAudioEngine` left it silent once.
+- **Mic capture: an input-only HAL unit (`AudioCapture`), not `AVAudioEngine`.** The engine opens
+  the system default input first and binds the default output; with AirPods connected (macOS
+  makes them the default input) that flipped them into headset mode and broke music playback,
+  even with another mic picked. The unit gets the chosen mic (or the default) before it starts,
+  output disabled.
 - **Open at login:** `SMAppService.mainApp` (`LoginItem`), toggled from the menu bar and Keys &
   Permissions. macOS holds the state (the user can change it in Login Items), never `Settings`.
   Off by default. It points at `build/Murmur.app`, which `bundle.sh` rebuilds at the same path.

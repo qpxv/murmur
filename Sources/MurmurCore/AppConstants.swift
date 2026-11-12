@@ -14,16 +14,16 @@ public enum AppConstants {
         /// What Deepgram receives: 16 kHz mono 16-bit PCM, plenty for speech.
         public static let sampleRate: Double = 16_000
         public static let channelCount: UInt32 = 1
-        /// Frames per tap callback at the hardware rate (~20 ms at 48 kHz): keeps latency and
+        /// Frames per captured block at the hardware rate (~20 ms at 48 kHz): keeps latency and
         /// the voice bar responsive.
-        public static let tapBufferFrames: UInt32 = 1_024
+        public static let blockFrames: UInt32 = 1_024
         /// Loudness (dBFS) that maps to an empty / full voice bar.
         public static let silenceFloorDecibels: Float = -55
         public static let fullScaleDecibels: Float = -10
         /// A sample this close to full scale (1.0) counts as clipping.
         public static let clippingThreshold: Float = 0.99
         /// UID prefix of the private aggregate device core audio creates for a process's own
-        /// AVAudioEngine; it shows up in the device list but isn't a microphone.
+        /// audio engine; it shows up in the device list but isn't a microphone.
         public static let privateAggregateUIDPrefix = "CADefaultDeviceAggregate"
     }
 
