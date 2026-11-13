@@ -9,7 +9,9 @@ import os
 @MainActor
 @Observable
 final class DictationController {
-    private(set) var state: DictationState = .idle
+    private(set) var state: DictationState = .idle {
+        didSet { hotkeys?.isRecording = state.isRecording }
+    }
     /// Most recent mic levels (0...1), oldest first, for the voice bar.
     private(set) var levels = DictationController.silentLevels
     private(set) var isHotkeyActive = false
@@ -62,7 +64,7 @@ final class DictationController {
     }
 
     private func startHotkey() {
-        let monitor = hotkeys ?? HotkeyMonitor { [weak self] event in self?.handle(event) ?? false }
+        let monitor = hotkeys ?? HotkeyMonitor { [weak self] event in self?.handle(event) }
         monitor.hotkey = settingsStore.settings.hotkey
         hotkeys = monitor
         isHotkeyActive = monitor.start()
@@ -111,7 +113,7 @@ final class DictationController {
         cancel()
     }
 
-    private func handle(_ event: HotkeyMonitor.Event) -> Bool {
+    private func handle(_ event: HotkeyMonitor.Event) {
         let action: HotkeyAction =
             switch event {
             case .hotkeyDown(let time): gesture.hotkeyDown(at: time)
@@ -120,9 +122,6 @@ final class DictationController {
             case .otherKey: gesture.otherKeyDown()
             }
         perform(action)
-        // every space typed while the dictation key is down during a recording belongs to the lock gesture
-        if case .space = event { return state.isRecording }
-        return false
     }
 
     private func perform(_ action: HotkeyAction) {
