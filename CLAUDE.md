@@ -16,6 +16,9 @@ owns architecture, quality and maintenance.
   a modifier counts on release, a combination is rejected, Escape cancels, space can't be it). The
   chosen key is taken over completely: its events are swallowed and, for a modifier, its flag is
   stripped from other keys while held. fn is the exception (not swallowed: fn + arrows, F-keys).
+  The event tap runs on its own thread and only decides what to swallow; the work happens later on
+  the main actor. macOS lets a key through when a tap answers too slowly, so a busy main thread used
+  to type the dictation key (a stray `^`).
 - An unlocked press shorter than `AppConstants.Hotkey.minimumHold` is discarded, and so is
   an unlocked recording where another key is pressed with the dictation key.
 - While recording, the user can click around, switch apps, use Mission Control: nothing is
