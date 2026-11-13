@@ -74,6 +74,9 @@ public static class Theme
         public const double PreviewHeight = 60;
         public const double FieldWidth = 320;
         public const double NarrowFieldWidth = 56;
+        public const double IconTextGap = 4;
+        /// <summary>How long a copy button shows "Copied" before turning back.</summary>
+        public static readonly TimeSpan CopiedFeedback = TimeSpan.FromSeconds(1.5);
     }
 
     public static class StatCard
@@ -115,6 +118,7 @@ public static class Theme
         public const string Keyboard = "\uE765";
         public const string Keys = "\uE8D7";
         public const string Copy = "\uE8C8";
+        public const string Check = "\uE73E";
         public const string Remove = "\uE738";
     }
 

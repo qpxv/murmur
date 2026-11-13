@@ -46,6 +46,8 @@ enum Theme {
         static let previewLines = 3
         /// "1h 23m", not "1h 23m 4s"
         static let durationUnitCount = 2
+        /// How long a copy button shows "Copied" before turning back.
+        static let copiedFeedback: TimeInterval = 1.5
     }
 
     enum StatCard {

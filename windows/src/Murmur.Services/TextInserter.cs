@@ -134,6 +134,9 @@ public static partial class TextInserter
         }
     }
 
+    /// <summary>Puts text on the clipboard, retrying while another app holds it. False if it stayed busy.</summary>
+    public static bool Copy(string text) => SetClipboard(text);
+
     private static bool SetClipboard(string text) => Retry(() => Clipboard.SetDataObject(text, copy: true));
 
     // a copy of every format that can be read now, so delayed-rendered data doesn't vanish with its app

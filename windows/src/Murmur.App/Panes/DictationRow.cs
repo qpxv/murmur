@@ -1,7 +1,9 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Murmur.Core;
+using Murmur.Services;
 
 namespace Murmur.App.Panes;
 
@@ -23,8 +25,7 @@ public static class DictationRow
         var header = new DockPanel();
         if (record.Text.Length > 0)
         {
-            var copy = new Button { Content = Ui.Glyph(Theme.Icons.Copy, Theme.Window.CaptionFontSize), ToolTip = "Copy text" };
-            copy.Click += (_, _) => Clipboard.SetText(record.Text);
+            var copy = CopyButton(record.Text);
             DockPanel.SetDock(copy, Dock.Right);
             header.Children.Add(copy);
         }
@@ -39,6 +40,36 @@ public static class DictationRow
         }
         return row;
     }
+
+    // shows "Copied" for a moment so the click visibly did something; a one-shot timer, stopped on tick
+    private static Button CopyButton(string text)
+    {
+        var button = new Button { Content = CopyIcon(), ToolTip = "Copy text" };
+        var reset = new DispatcherTimer { Interval = Theme.Window.CopiedFeedback };
+        reset.Tick += (_, _) =>
+        {
+            reset.Stop();
+            button.Content = CopyIcon();
+        };
+        button.Click += (_, _) =>
+        {
+            if (TextInserter.Copy(text))
+            {
+                button.Content = Ui.Done("Copied");
+            }
+            else
+            {
+                var failed = Ui.Caution("Clipboard busy, try again");
+                failed.FontSize = Theme.Window.CaptionFontSize;
+                button.Content = failed;
+            }
+            reset.Stop();
+            reset.Start();
+        };
+        return button;
+    }
+
+    private static TextBlock CopyIcon() => Ui.Glyph(Theme.Icons.Copy, Theme.Window.CaptionFontSize);
 
     private static UIElement Body(DictationRecord record, bool showsAll)
     {

@@ -7,6 +7,7 @@ import SwiftUI
 struct DictationRow: View {
     let record: DictationRecord
     var showsOriginal = false
+    @State private var isCopied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.StatCard.valueSpacing) {
@@ -22,10 +23,16 @@ struct DictationRow: View {
                 }
                 Spacer()
                 if !record.text.isEmpty {
-                    Button("Copy", systemImage: "doc.on.doc", action: copy)
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.borderless)
-                        .help("Copy text")
+                    if isCopied {
+                        Label("Copied", systemImage: "checkmark")
+                            .foregroundStyle(.green)
+                            .transition(.opacity)
+                    } else {
+                        Button("Copy", systemImage: "doc.on.doc", action: copy)
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.borderless)
+                            .help("Copy text")
+                    }
                 }
             }
             .font(.caption)
@@ -50,10 +57,17 @@ struct DictationRow: View {
             }
         }
         .padding(.vertical, Theme.StatCard.valueSpacing)
+        // one-shot: flips "Copied" back after a moment, cancelled if the row goes away
+        .task(id: isCopied) {
+            guard isCopied else { return }
+            try? await Task.sleep(for: .seconds(Theme.Window.copiedFeedback))
+            withAnimation { isCopied = false }
+        }
     }
 
     private func copy() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(record.text, forType: .string)
+        withAnimation { isCopied = true }
     }
 }

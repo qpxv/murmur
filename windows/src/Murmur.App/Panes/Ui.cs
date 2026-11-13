@@ -99,6 +99,14 @@ public static class Ui
         return block;
     }
 
+    /// <summary>A small green check with a word next to it, for "it worked" right where the user clicked.</summary>
+    public static StackPanel Done(string text)
+    {
+        var label = Colored(Text(text, Theme.Window.CaptionFontSize), SuccessBrush);
+        label.VerticalAlignment = VerticalAlignment.Center;
+        return Horizontal(Theme.Window.IconTextGap, Colored(Glyph(Theme.Icons.Check, Theme.Window.CaptionFontSize), SuccessBrush), label);
+    }
+
     public static CheckBox Toggle(string label, bool isOn, Action<bool> changed)
     {
         var box = new CheckBox { Content = label, IsChecked = isOn };
