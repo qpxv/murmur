@@ -26,8 +26,10 @@ public actor DeepgramStream {
     private var sendTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
 
-    public init(apiKey: String, vocabulary: [String]) throws(DictationError) {
-        guard let url = DeepgramMessages.listenURL(vocabulary: vocabulary) else { throw .connectionFailed }
+    public init(apiKey: String, vocabulary: [String], language: DictationLanguage) throws(DictationError) {
+        guard let url = DeepgramMessages.listenURL(vocabulary: vocabulary, language: language) else {
+            throw .connectionFailed
+        }
         var request = URLRequest(url: url)
         request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
         socket = URLSession.shared.webSocketTask(with: request)

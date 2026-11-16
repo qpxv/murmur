@@ -1,13 +1,23 @@
+import MurmurCore
 import MurmurServices
 import SwiftUI
 
-/// Microphone choice and the whisper-friendly volume boost.
+/// Spoken language, microphone choice and the whisper-friendly volume boost.
 struct AudioPane: View {
     @Bindable var settingsStore: SettingsStore
     @State private var devices: [InputDevice] = []
 
     var body: some View {
         Form {
+            Section {
+                Picker("Language", selection: $settingsStore.settings.language) {
+                    ForEach(DictationLanguage.allCases, id: \.self) { language in
+                        Text(language.title).tag(language)
+                    }
+                }
+            } footer: {
+                Text("The language you speak. Takes effect on the next dictation.")
+            }
             Section {
                 Picker("Microphone", selection: $settingsStore.settings.inputDeviceUID) {
                     Text("System Default").tag(String?.none)

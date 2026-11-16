@@ -34,10 +34,16 @@ struct SharedConfig: Decodable, Sendable {
         let finishTimeoutSeconds: Double
     }
 
+    /// Deepgram's code for each `DictationLanguage`.
+    struct DeepgramLanguages: Decodable, Sendable {
+        let english: String
+        let german: String
+    }
+
     struct Deepgram: Decodable, Sendable {
         let listenURL: String
         let model: String
-        let language: String
+        let languages: DeepgramLanguages
         let finalizeTimeoutSeconds: Double
     }
 

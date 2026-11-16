@@ -5,12 +5,12 @@ public enum DeepgramMessages {
     public static let finalize = #"{"type":"Finalize"}"#
     public static let closeStream = #"{"type":"CloseStream"}"#
 
-    /// The listen URL for 16 kHz mono PCM, with every vocabulary term boosted as a key term.
-    public static func listenURL(vocabulary: [String]) -> URL? {
+    /// The listen URL for 16 kHz mono PCM in `language`, with every vocabulary term boosted as a key term.
+    public static func listenURL(vocabulary: [String], language: DictationLanguage) -> URL? {
         var components = URLComponents(string: AppConstants.Deepgram.listenURL)
         let fixed: [URLQueryItem] = [
             URLQueryItem(name: "model", value: AppConstants.Deepgram.model),
-            URLQueryItem(name: "language", value: AppConstants.Deepgram.language),
+            URLQueryItem(name: "language", value: language.deepgramCode),
             URLQueryItem(name: "encoding", value: "linear16"),
             URLQueryItem(name: "sample_rate", value: String(Int(AppConstants.Audio.sampleRate))),
             URLQueryItem(name: "channels", value: String(AppConstants.Audio.channelCount)),

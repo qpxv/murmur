@@ -29,6 +29,11 @@ struct MenuContent: View {
         }
         Divider()
         Toggle("Clean Up with Claude", isOn: $settingsStore.settings.isCleanupEnabled)
+        Picker("Language", selection: $settingsStore.settings.language) {
+            ForEach(DictationLanguage.allCases, id: \.self) { language in
+                Text(language.title).tag(language)
+            }
+        }
         Picker("Microphone", selection: $settingsStore.settings.inputDeviceUID) {
             Text("System Default").tag(String?.none)
             // read here, not cached: a cheap core audio query, and a newly plugged-in mic shows up

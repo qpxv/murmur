@@ -15,7 +15,10 @@
   "deepgram": {
     "listenURL": "wss://api.deepgram.com/v1/listen",
     "model": "nova-3",
-    "language": "en",
+    "languages": {
+      "english": "en",
+      "german": "de"
+    },
     "finalizeTimeoutSeconds": 3
   }
 }

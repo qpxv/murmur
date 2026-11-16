@@ -4,7 +4,7 @@ import Testing
 
 struct DeepgramMessagesTests {
     @Test func listenURLCarriesAudioFormatAndModel() throws {
-        let url = try #require(DeepgramMessages.listenURL(vocabulary: []))
+        let url = try #require(DeepgramMessages.listenURL(vocabulary: [], language: .english))
         let items = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
         #expect(url.host() == "api.deepgram.com")
         #expect(items.contains(URLQueryItem(name: "model", value: "nova-3")))
@@ -13,8 +13,18 @@ struct DeepgramMessagesTests {
         #expect(items.contains(URLQueryItem(name: "channels", value: "1")))
     }
 
+    @Test(arguments: [(DictationLanguage.english, "en"), (.german, "de")])
+    func listenURLCarriesChosenLanguage(language: DictationLanguage, code: String) throws {
+        let url = try #require(DeepgramMessages.listenURL(vocabulary: ["Claude Code"], language: language))
+        let items = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
+        #expect(items.filter { $0.name == "language" } == [URLQueryItem(name: "language", value: code)])
+        #expect(items.contains(URLQueryItem(name: "keyterm", value: "Claude Code")))
+    }
+
     @Test func eachVocabularyTermBecomesItsOwnKeyterm() throws {
-        let url = try #require(DeepgramMessages.listenURL(vocabulary: ["Claude Code", " cmux ", ""]))
+        let url = try #require(
+            DeepgramMessages.listenURL(vocabulary: ["Claude Code", " cmux ", ""], language: .english)
+        )
         let items = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
         let keyterms = items.filter { $0.name == "keyterm" }.map(\.value)
         #expect(keyterms == ["Claude Code", "cmux"])

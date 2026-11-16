@@ -32,7 +32,9 @@ public enum AppConstants {
         private static let shared = SharedFiles.config.deepgram
         public static let listenURL = shared.listenURL
         public static let model = shared.model
-        public static let language = shared.language
+        /// Deepgram's language codes for each `DictationLanguage`.
+        public static let englishLanguageCode = shared.languages.english
+        public static let germanLanguageCode = shared.languages.german
         /// How long to wait for the last words after asking Deepgram to finalize.
         public static let finalizeTimeout: TimeInterval = shared.finalizeTimeoutSeconds
     }

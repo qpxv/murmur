@@ -158,7 +158,11 @@ final class DictationController {
     private func begin(apiKey: String) throws(DictationError) {
         errorResetTask?.cancel()
         let settings = settingsStore.settings
-        let stream = try DeepgramStream(apiKey: apiKey, vocabulary: settings.vocabulary)
+        let stream = try DeepgramStream(
+            apiKey: apiKey,
+            vocabulary: settings.vocabulary,
+            language: settings.language
+        )
         let session = CleanupSession(
             cleaner: makeCleaner(settings: settings),
             vocabulary: settings.vocabulary,
