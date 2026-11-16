@@ -38,6 +38,10 @@ owns architecture, quality and maintenance.
 
 - **Swift 6 + SwiftUI/AppKit, macOS 26+ only.** Swift Package, no Xcode project.
 - **Speech-to-text: Deepgram streaming** (WebSocket). The Claude API takes no audio.
+- **Language: English or German** (`Settings.language`, English by default), picked in the menu
+  bar / tray and the Audio pane. One Deepgram language per dictation (`en` / `de`, no mixed mode);
+  vocabulary keyterms work for both. The cleanup prompt is language-neutral (keeps the spoken
+  language, formal = polished text in that language, casual stays all lowercase).
 - **Cleanup: `claude-opus-5-5`, effort `low`**, `fallbacks: "default"`, via the Messages API
   over `URLSession` (no official Swift SDK). Paid from the Max plan's included API credit.
   Flow: `DeepgramStream.results` -> `CleanupSession` -> `Chunker` closes chunks at pauses
@@ -104,7 +108,7 @@ scripts/                 gates.sh, bundle.sh, make-icon.sh, create-signing-cert.
 ## Single source of truth
 
 - What both apps must agree on lives in `shared/`: `config.json` (model, API version, beta, effort,
-  max tokens, chunk sizes, context words, timeouts, Deepgram URL/model/language) and
+  max tokens, chunk sizes, context words, timeouts, Deepgram URL/model/language codes) and
   `cleanup-prompt.json` (every prompt text). The Mac bundles them as a SwiftPM resource through the
   `Sources/MurmurCore/Shared` symlink (`SharedFiles.swift`; `bundle.sh` copies the resource bundle
   into the app); Windows embeds them. `AppConstants` re-exports them. Edit the JSON, never a copy.
