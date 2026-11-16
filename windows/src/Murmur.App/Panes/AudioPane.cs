@@ -1,10 +1,11 @@
 using System.Windows;
 using System.Windows.Controls;
+using Murmur.Core;
 using Murmur.Services;
 
 namespace Murmur.App.Panes;
 
-/// <summary>Microphone choice and the whisper-friendly volume boost.</summary>
+/// <summary>Spoken language, microphone choice and the whisper-friendly volume boost.</summary>
 public static class AudioPane
 {
     private const string SystemDefault = "Windows default";
@@ -30,11 +31,31 @@ public static class AudioPane
 
         return Ui.Page(
             Pane.Audio.Title(),
+            Ui.Section(header: null, footer: "The language you speak. Takes effect on the next dictation.", Ui.Row("Language", LanguagePicker(settings))),
             Ui.Section(header: null, footer: "If the chosen microphone is unplugged, the Windows default is used.", Ui.Row("Microphone", picker)),
             Ui.Section(
                 header: null,
                 footer: "Turns input volume to 100% while you dictate, so even whispers come through, then puts it back.",
                 Ui.Toggle("Boost mic while recording", settings.Current.IsMicBoostEnabled, isOn =>
                     settings.Update(current => current with { IsMicBoostEnabled = isOn }))));
+    }
+
+    private static ComboBox LanguagePicker(SettingsStore settings)
+    {
+        var languages = Enum.GetValues<DictationLanguage>();
+        var picker = new ComboBox { Width = Theme.Window.FieldWidth };
+        foreach (var language in languages)
+        {
+            picker.Items.Add(new ComboBoxItem { Content = language.Title(), Tag = language });
+        }
+        picker.SelectedIndex = Array.IndexOf(languages, settings.Current.Language);
+        picker.SelectionChanged += (_, _) =>
+        {
+            if (picker.SelectedItem is ComboBoxItem { Tag: DictationLanguage language })
+            {
+                settings.Update(current => current with { Language = language });
+            }
+        };
+        return picker;
     }
 }

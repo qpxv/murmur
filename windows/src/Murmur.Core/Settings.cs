@@ -37,6 +37,9 @@ public sealed record Settings
     /// <summary>The key that dictates while held.</summary>
     public Hotkey Hotkey { get; init; } = Hotkey.CapsLock;
 
+    /// <summary>The language the user speaks.</summary>
+    public DictationLanguage Language { get; init; } = DictationLanguage.English;
+
     public static Settings Defaults { get; } = new();
 
     /// <summary>
@@ -62,7 +65,8 @@ public sealed record Settings
         && TypingWordsPerMinute == other.TypingWordsPerMinute
         && IsHistoryEnabled == other.IsHistoryEnabled
         && SyncDeviceName == other.SyncDeviceName
-        && Hotkey == other.Hotkey;
+        && Hotkey == other.Hotkey
+        && Language == other.Language;
 
     public override int GetHashCode() => HashCode.Combine(IsMicBoostEnabled, InputDeviceId, OverlayPosition, Cleanup);
 }

@@ -48,7 +48,10 @@ public sealed record SharedConfig(SharedConfig.CleanupConfig Cleanup, SharedConf
         double RequestTimeoutSeconds,
         double FinishTimeoutSeconds);
 
-    public sealed record DeepgramConfig(Uri ListenUrl, string Model, string Language, double FinalizeTimeoutSeconds);
+    public sealed record DeepgramConfig(Uri ListenUrl, string Model, DeepgramLanguages Languages, double FinalizeTimeoutSeconds);
+
+    /// <summary>Deepgram's code for each <see cref="DictationLanguage"/>.</summary>
+    public sealed record DeepgramLanguages(string English, string German);
 }
 
 /// <summary><c>shared/cleanup-prompt.json</c>: the building blocks of the cleanup system prompt.</summary>

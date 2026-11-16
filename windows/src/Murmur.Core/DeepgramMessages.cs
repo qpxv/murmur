@@ -9,13 +9,16 @@ public static class DeepgramMessages
     public const string Finalize = """{"type":"Finalize"}""";
     public const string CloseStream = """{"type":"CloseStream"}""";
 
-    /// <summary>The listen URL for 16 kHz mono PCM, with every vocabulary term boosted as a key term.</summary>
-    public static Uri ListenUri(IEnumerable<string> vocabulary)
+    /// <summary>
+    /// The listen URL for 16 kHz mono PCM in <paramref name="language"/>, with every vocabulary term
+    /// boosted as a key term.
+    /// </summary>
+    public static Uri ListenUri(IEnumerable<string> vocabulary, DictationLanguage language)
     {
         (string Name, string Value)[] fixedItems =
         [
             ("model", AppConstants.Deepgram.Model),
-            ("language", AppConstants.Deepgram.Language),
+            ("language", language.DeepgramCode()),
             ("encoding", "linear16"),
             ("sample_rate", AppConstants.Audio.SampleRate.ToString(System.Globalization.CultureInfo.InvariantCulture)),
             ("channels", AppConstants.Audio.ChannelCount.ToString(System.Globalization.CultureInfo.InvariantCulture)),

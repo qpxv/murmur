@@ -175,7 +175,7 @@ public sealed class DictationController : IDisposable
         _errorReset?.Stop();
         var settings = _settings.Current;
 #pragma warning disable CA2000 // owned by the ActiveDictation below, disposed when it's delivered or cancelled
-        var deepgram = new DeepgramSession(apiKey, settings.Vocabulary);
+        var deepgram = new DeepgramSession(apiKey, settings.Vocabulary, settings.Language);
         var session = new CleanupSession(Cleaner(settings), settings.Vocabulary, TextInserter.ForegroundAppName());
 #pragma warning restore CA2000
         if (settings.IsMicBoostEnabled)

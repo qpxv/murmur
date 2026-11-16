@@ -54,6 +54,7 @@ public sealed partial class MurmurApp : Application, IDisposable
         var dictation = new DictationController(settings, Dispatcher);
         var pill = new PillWindow(settings);
         var tray = new TrayIcon(
+            settings,
             openWindow: () => OpenWindow(null),
             checkForUpdates: CheckForUpdates,
             copyDiagnostics: CopyDiagnostics,

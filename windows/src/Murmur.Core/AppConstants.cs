@@ -40,7 +40,9 @@ public static class AppConstants
         private static readonly SharedConfig.DeepgramConfig Shared = SharedFiles.Config.Deepgram;
         public static readonly Uri ListenUrl = Shared.ListenUrl;
         public static readonly string Model = Shared.Model;
-        public static readonly string Language = Shared.Language;
+        /// <summary>Deepgram's language codes for each <see cref="DictationLanguage"/>.</summary>
+        public static readonly string EnglishLanguageCode = Shared.Languages.English;
+        public static readonly string GermanLanguageCode = Shared.Languages.German;
         /// <summary>How long to wait for the last words after asking Deepgram to finalize.</summary>
         public static readonly TimeSpan FinalizeTimeout = TimeSpan.FromSeconds(Shared.FinalizeTimeoutSeconds);
         public static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(10);

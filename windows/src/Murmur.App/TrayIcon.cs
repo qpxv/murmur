@@ -14,25 +14,42 @@ public sealed class TrayIcon : IDisposable
     private readonly NotifyIcon _icon;
     private readonly ToolStripMenuItem _startWithWindows;
     private readonly ToolStripMenuItem _hint;
+    private readonly ToolStripMenuItem _language;
 
-    public TrayIcon(Action openWindow, Action checkForUpdates, Action copyDiagnostics, Action quit)
+    public TrayIcon(SettingsStore settings, Action openWindow, Action checkForUpdates, Action copyDiagnostics, Action quit)
     {
         _hint = new ToolStripMenuItem { Enabled = false };
         _startWithWindows = new ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
         // click, not CheckedChanged: re-reading the state when the menu opens must not write it back
         _startWithWindows.Click += (_, _) => StartWithWindows.SetEnabled(_startWithWindows.Checked);
+        _language = new ToolStripMenuItem("Language");
+        foreach (var language in Enum.GetValues<DictationLanguage>())
+        {
+            _language.DropDownItems.Add(new ToolStripMenuItem(language.Title(), image: null, (_, _) =>
+                settings.Update(current => current with { Language = language }))
+            { Tag = language });
+        }
 
         var menu = new ContextMenuStrip();
         menu.Items.Add(_hint);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Open Murmur…", image: null, (_, _) => openWindow()));
+        menu.Items.Add(_language);
         menu.Items.Add(_startWithWindows);
         menu.Items.Add(new ToolStripMenuItem("Check for updates…", image: null, (_, _) => checkForUpdates()));
         menu.Items.Add(new ToolStripMenuItem("Copy diagnostics", image: null, (_, _) => copyDiagnostics()));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Quit Murmur", image: null, (_, _) => quit()));
         // read when the menu opens, so a change made in task manager's startup apps shows up
-        menu.Opening += (_, _) => _startWithWindows.Checked = StartWithWindows.IsEnabled;
+        menu.Opening += (_, _) =>
+        {
+            _startWithWindows.Checked = StartWithWindows.IsEnabled;
+            // the window can change the language too
+            foreach (ToolStripMenuItem item in _language.DropDownItems)
+            {
+                item.Checked = item.Tag is DictationLanguage language && language == settings.Current.Language;
+            }
+        };
 
         _icon = new NotifyIcon
         {
@@ -63,6 +80,7 @@ public sealed class TrayIcon : IDisposable
         _icon.ContextMenuStrip?.Dispose();
         _icon.Dispose();
         _hint.Dispose();
+        _language.Dispose();
         _startWithWindows.Dispose();
     }
 

@@ -7,7 +7,7 @@ public class DeepgramMessagesTests
     [Fact]
     public void Listen_url_carries_audio_format_and_model()
     {
-        var uri = DeepgramMessages.ListenUri([]);
+        var uri = DeepgramMessages.ListenUri([], DictationLanguage.English);
         var query = HttpUtility.ParseQueryString(uri.Query);
         Assert.Equal("wss", uri.Scheme);
         Assert.Equal("api.deepgram.com", uri.Host);
@@ -18,10 +18,20 @@ public class DeepgramMessagesTests
         Assert.Equal("1", query["channels"]);
     }
 
+    [Theory]
+    [InlineData(DictationLanguage.English, "en")]
+    [InlineData(DictationLanguage.German, "de")]
+    public void Listen_url_carries_chosen_language(DictationLanguage language, string code)
+    {
+        var query = HttpUtility.ParseQueryString(DeepgramMessages.ListenUri(["Claude Code"], language).Query);
+        Assert.Equal([code], query.GetValues("language") ?? []);
+        Assert.Equal(["Claude Code"], query.GetValues("keyterm") ?? []);
+    }
+
     [Fact]
     public void Each_vocabulary_term_becomes_its_own_keyterm()
     {
-        var uri = DeepgramMessages.ListenUri(["Claude Code", " cmux ", ""]);
+        var uri = DeepgramMessages.ListenUri(["Claude Code", " cmux ", ""], DictationLanguage.English);
         var query = HttpUtility.ParseQueryString(uri.Query);
         Assert.Equal(["Claude Code", "cmux"], query.GetValues("keyterm") ?? []);
         Assert.Contains("keyterm=Claude%20Code", uri.AbsoluteUri, StringComparison.Ordinal);

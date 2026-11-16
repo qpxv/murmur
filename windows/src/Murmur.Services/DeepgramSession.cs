@@ -32,9 +32,9 @@ public sealed class DeepgramSession : IDisposable
     private volatile bool _isClosed;
     private DictationError? _failure;
 
-    public DeepgramSession(string apiKey, IReadOnlyList<string> vocabulary)
+    public DeepgramSession(string apiKey, IReadOnlyList<string> vocabulary, DictationLanguage language)
     {
-        _uri = DeepgramMessages.ListenUri(vocabulary);
+        _uri = DeepgramMessages.ListenUri(vocabulary, language);
         _socket.Options.SetRequestHeader("Authorization", $"Token {apiKey}");
         // keeps the http status of a refused upgrade, so a wrong key can be told apart from no network
         _socket.Options.CollectHttpResponseDetails = true;

@@ -18,9 +18,14 @@ public class SettingsTests
             IsHistoryEnabled = false,
             SyncDeviceName = "Mia's laptop",
             Hotkey = new Hotkey(0xA3),
+            Language = DictationLanguage.German,
         };
         Assert.Equal(settings, SettingsJson.Decode(SettingsJson.Encode(settings)));
     }
+
+    [Fact]
+    public void Language_is_part_of_equality() =>
+        Assert.NotEqual(Settings.Defaults, Settings.Defaults with { Language = DictationLanguage.German });
 
     [Fact]
     public void Missing_keys_fall_back_to_defaults()
@@ -33,6 +38,7 @@ public class SettingsTests
         };
         Assert.Equal(expected, settings);
         Assert.Equal(Hotkey.CapsLock, settings?.Hotkey);
+        Assert.Equal(DictationLanguage.English, settings?.Language);
     }
 
     [Fact]
