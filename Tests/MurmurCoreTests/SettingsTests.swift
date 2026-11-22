@@ -17,6 +17,7 @@ struct SettingsTests {
         settings.syncDeviceName = "Mia's Mac"
         settings.hotkey = Hotkey(keyCode: Hotkey.KeyCode.rightOption)
         settings.language = .german
+        settings.isScreenContextEnabled = false
         let data = try JSONEncoder().encode(settings)
         #expect(try JSONDecoder().decode(Settings.self, from: data) == settings)
     }
@@ -29,6 +30,7 @@ struct SettingsTests {
         #expect(settings == expected)
         #expect(settings.hotkey == .function)
         #expect(settings.language == .english)
+        #expect(settings.isScreenContextEnabled)
     }
 
     @Test func addsTrimmedNewTerm() {

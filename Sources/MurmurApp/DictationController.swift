@@ -158,11 +158,7 @@ final class DictationController {
     private func begin(apiKey: String) throws(DictationError) {
         errorResetTask?.cancel()
         let settings = settingsStore.settings
-        let stream = try DeepgramStream(
-            apiKey: apiKey,
-            vocabulary: settings.vocabulary,
-            language: settings.language
-        )
+        let stream = DeepgramStream(apiKey: apiKey, language: settings.language)
         let session = CleanupSession(
             cleaner: makeCleaner(settings: settings),
             vocabulary: settings.vocabulary,
@@ -178,15 +174,30 @@ final class DictationController {
             stream.send(pcm)
             Task { @MainActor in self?.record(measure) }
         }
-        Task { await stream.start() }
+        let setup = Task { await connect(stream, session: session, settings: settings) }
         let forwarding = Task {
             for await result in stream.results {
                 await session.add(result)
             }
         }
-        active = ActiveDictation(stream: stream, session: session, forwarding: forwarding, startedAt: .now)
+        active = ActiveDictation(
+            stream: stream,
+            session: session,
+            setup: setup,
+            forwarding: forwarding,
+            startedAt: .now
+        )
         levels = Self.silentLevels
         state = state.applying(.start)
+    }
+
+    // the mic is already running: its audio waits in the stream while the screen is read
+    private func connect(_ stream: DeepgramStream, session: CleanupSession, settings: Settings) async {
+        let screen =
+            settings.isScreenContextEnabled
+            ? await ScreenReader.context(vocabulary: settings.vocabulary, language: settings.language) : .empty
+        await session.useScreen(screen.text)
+        await stream.start(keyterms: settings.vocabulary + screen.terms)
     }
 
     private func makeCleaner(settings: Settings) -> ClaudeCleaner? {
@@ -215,6 +226,8 @@ final class DictationController {
     }
 
     private func deliver(_ dictation: ActiveDictation, speakingSeconds: Double) async {
+        // a very short dictation can stop before deepgram has even connected
+        await dictation.setup.value
         do {
             try await dictation.stream.finish()
         } catch {
@@ -291,6 +304,8 @@ final class DictationController {
 private struct ActiveDictation {
     let stream: DeepgramStream
     let session: CleanupSession
+    /// Reads the screen, then connects Deepgram.
+    let setup: Task<Void, Never>
     /// Moves Deepgram's segments into the cleanup session; ends when the stream ends.
     let forwarding: Task<Void, Never>
     let startedAt: ContinuousClock.Instant

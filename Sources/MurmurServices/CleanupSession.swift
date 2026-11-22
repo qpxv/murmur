@@ -14,8 +14,8 @@ public actor CleanupSession {
     }
 
     private let cleaner: ClaudeCleaner?
-    private let vocabulary: [String]
-    private let appName: String?
+    // the screen is filled in once read, before deepgram connects, so before the first chunk
+    private var context: CleanupContext
 
     private var chunker = Chunker()
     private var assembler = TranscriptAssembler()
@@ -28,8 +28,12 @@ public actor CleanupSession {
     /// `cleaner` is `nil` when cleanup is off or no Claude key is set: chunks then stay raw.
     public init(cleaner: ClaudeCleaner?, vocabulary: [String], appName: String?) {
         self.cleaner = cleaner
-        self.vocabulary = vocabulary
-        self.appName = appName
+        context = CleanupContext(vocabulary: vocabulary, appName: appName, screen: "")
+    }
+
+    /// The screen text Claude gets as context with every chunk.
+    public func useScreen(_ text: String) {
+        context.screen = text
     }
 
     public func add(_ result: DeepgramMessages.FinalResult) {
@@ -76,8 +80,7 @@ public actor CleanupSession {
             transcript: chunk.raw,
             previous: chunk.previous,
             next: Chunker.firstWords(of: next, count: AppConstants.Cleanup.contextWords),
-            vocabulary: vocabulary,
-            appName: appName
+            context: context
         )
         inFlight += 1
         requests.append(

@@ -1,3 +1,4 @@
+import MurmurCore
 import MurmurServices
 import SwiftUI
 
@@ -20,6 +21,14 @@ struct VocabularyPane: View {
                 }
             } footer: {
                 Text("Names, products and jargon that get misheard, e.g. “Claude Code”.")
+            }
+            Section {
+                Toggle("Use names from the screen", isOn: $settingsStore.settings.isScreenContextEnabled)
+            } footer: {
+                Text(
+                    "When you start dictating, the text of the front window (a chat, a web page) is read, so names "
+                        + "on it are spelled right. It's sent to Deepgram and Claude with that dictation, never saved."
+                )
             }
             Section("\(settingsStore.settings.vocabulary.count) terms") {
                 ForEach(settingsStore.settings.vocabulary, id: \.self) { term in

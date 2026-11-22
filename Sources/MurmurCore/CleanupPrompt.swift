@@ -14,7 +14,7 @@ public enum CleanupPrompt {
         ]
         .compactMap { $0 }
         let changes = fixes.isEmpty ? "" : texts.fixesHeader + "\n" + fixes.joined(separator: "\n")
-        return [texts.intro, changes, style(options.style), texts.boundaries, texts.output]
+        return [texts.intro, changes, style(options.style), texts.boundaries, texts.screen, texts.output]
             .filter { !$0.isEmpty }
             .joined(separator: "\n\n")
     }
@@ -23,13 +23,13 @@ public enum CleanupPrompt {
         transcript: String,
         previous: String,
         next: String,
-        vocabulary: [String],
-        appName: String?
+        context: CleanupContext
     ) -> String {
-        let terms = vocabulary.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        let terms = context.vocabulary.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         let lines = [
             terms.isEmpty ? nil : "<vocabulary>\(terms.joined(separator: ", "))</vocabulary>",
-            appName.map { "<app>\($0)</app>" },
+            context.appName.map { "<app>\($0)</app>" },
+            context.screen.isEmpty ? nil : "<screen>\n\(context.screen)\n</screen>",
             previous.isEmpty ? nil : "<previous>\(previous)</previous>",
             "<transcript>\n\(transcript)\n</transcript>",
             next.isEmpty ? nil : "<next>\(next)</next>",

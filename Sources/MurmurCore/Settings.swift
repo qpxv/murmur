@@ -25,6 +25,8 @@ public struct Settings: Codable, Equatable, Sendable {
     public var hotkey: Hotkey
     /// The language the user speaks.
     public var language: DictationLanguage
+    /// Read the front window's text at the start of a dictation, so names on screen come out right.
+    public var isScreenContextEnabled: Bool
 
     public static let defaults = Self(
         isMicBoostEnabled: true,
@@ -37,7 +39,8 @@ public struct Settings: Codable, Equatable, Sendable {
         isHistoryEnabled: true,
         syncDeviceName: "",
         hotkey: .function,
-        language: .english
+        language: .english,
+        isScreenContextEnabled: true
     )
 
     private init(
@@ -51,7 +54,8 @@ public struct Settings: Codable, Equatable, Sendable {
         isHistoryEnabled: Bool,
         syncDeviceName: String,
         hotkey: Hotkey,
-        language: DictationLanguage
+        language: DictationLanguage,
+        isScreenContextEnabled: Bool
     ) {
         self.isMicBoostEnabled = isMicBoostEnabled
         self.inputDeviceUID = inputDeviceUID
@@ -64,6 +68,7 @@ public struct Settings: Codable, Equatable, Sendable {
         self.syncDeviceName = syncDeviceName
         self.hotkey = hotkey
         self.language = language
+        self.isScreenContextEnabled = isScreenContextEnabled
     }
 
     // missing keys fall back to the defaults, so adding a setting never wipes the saved ones
@@ -89,6 +94,9 @@ public struct Settings: Codable, Equatable, Sendable {
             try container.decodeIfPresent(String.self, forKey: .syncDeviceName) ?? fallback.syncDeviceName
         hotkey = try container.decodeIfPresent(Hotkey.self, forKey: .hotkey) ?? fallback.hotkey
         language = try container.decodeIfPresent(DictationLanguage.self, forKey: .language) ?? fallback.language
+        isScreenContextEnabled =
+            try container.decodeIfPresent(Bool.self, forKey: .isScreenContextEnabled)
+            ?? fallback.isScreenContextEnabled
     }
 
     /// Adds a vocabulary term unless it's blank or already there (ignoring case).

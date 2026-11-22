@@ -63,6 +63,19 @@ public enum AppConstants {
         public static let finishTimeout: TimeInterval = shared.finishTimeoutSeconds
     }
 
+    // the values live in shared/config.json, which the windows app reads too
+    public enum Screen {
+        private static let shared = SharedFiles.config.screen
+        /// Screen text sent to Claude is cut off after this many characters.
+        public static let maxCharacters = shared.maxCharacters
+        /// At most this many names from the screen are boosted in Deepgram.
+        public static let maxKeyterms = shared.maxKeyterms
+        /// Accessibility elements visited per read: a huge page stops here.
+        public static let maxElements = shared.maxElements
+        /// The read gives up after this long, so Deepgram never waits on a slow app.
+        public static let readTimeout: TimeInterval = shared.readTimeoutSeconds
+    }
+
     public enum Sync {
         /// Holds one row per dictation from every device: numbers only, never text.
         public static let tableName = "murmur_dictations"

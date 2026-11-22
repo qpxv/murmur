@@ -4,7 +4,8 @@ import os
 
 /// One live Deepgram transcription session for one dictation.
 ///
-/// Audio is queued from the audio thread with `send(_:)` and streamed in order. Finalized
+/// Audio is queued from the audio thread with `send(_:)` (also before `start(keyterms:)`, it waits
+/// for the connection) and streamed in order. Finalized
 /// segments come out of `results` as they arrive (never shown to the user, only cleaned and
 /// assembled). `finish()` flushes the last words; `results` ends right after.
 public actor DeepgramStream {
@@ -13,12 +14,15 @@ public actor DeepgramStream {
     /// Every finalized segment, in order. Ends when the stream finishes or is cancelled.
     public nonisolated let results: AsyncStream<DeepgramMessages.FinalResult>
 
-    private let socket: URLSessionWebSocketTask
+    private let apiKey: String
+    private let language: DictationLanguage
     private let audio: AsyncStream<Data>
     private let audioQueue: AsyncStream<Data>.Continuation
     private let resultsQueue: AsyncStream<DeepgramMessages.FinalResult>.Continuation
     private let logger = Logger(subsystem: Log.subsystem, category: "deepgram")
 
+    // set by start: the key terms (the screen's names) are only known by then
+    private var socket: URLSessionWebSocketTask?
     private var hasHeardSpeech = false
     private var isClosed = false
     private var failure: DictationError?
@@ -26,13 +30,9 @@ public actor DeepgramStream {
     private var sendTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
 
-    public init(apiKey: String, vocabulary: [String], language: DictationLanguage) throws(DictationError) {
-        guard let url = DeepgramMessages.listenURL(vocabulary: vocabulary, language: language) else {
-            throw .connectionFailed
-        }
-        var request = URLRequest(url: url)
-        request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
-        socket = URLSession.shared.webSocketTask(with: request)
+    public init(apiKey: String, language: DictationLanguage) {
+        self.apiKey = apiKey
+        self.language = language
         (audio, audioQueue) = AsyncStream.makeStream(of: Data.self, bufferingPolicy: .unbounded)
         (results, resultsQueue) = AsyncStream.makeStream(
             of: DeepgramMessages.FinalResult.self,
@@ -40,10 +40,21 @@ public actor DeepgramStream {
         )
     }
 
-    public func start() {
+    /// Connects with every one of `keyterms` boosted. Does nothing once cancelled.
+    public func start(keyterms: [String]) {
+        guard !isClosed else { return }
+        guard let url = DeepgramMessages.listenURL(vocabulary: keyterms, language: language) else {
+            failure = .connectionFailed
+            logger.error("couldn't build the deepgram url")
+            return
+        }
+        var request = URLRequest(url: url)
+        request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
+        let socket = URLSession.shared.webSocketTask(with: request)
+        self.socket = socket
         socket.resume()
-        sendTask = Task { await self.sendAudio() }
-        receiveTask = Task { await self.receiveResults() }
+        sendTask = Task { await self.sendAudio(over: socket) }
+        receiveTask = Task { await self.receiveResults(from: socket) }
     }
 
     /// Queues audio for sending. Safe to call from the audio thread.
@@ -56,7 +67,7 @@ public actor DeepgramStream {
     public func finish() async throws(DictationError) {
         audioQueue.finish()
         await sendTask?.value
-        if failure == nil {
+        if failure == nil, socket != nil {
             await sendText(DeepgramMessages.finalize)
             await waitForFinalize()
             await sendText(DeepgramMessages.closeStream)
@@ -72,13 +83,13 @@ public actor DeepgramStream {
 
     private func close() {
         isClosed = true
-        socket.cancel(with: .normalClosure, reason: nil)
+        socket?.cancel(with: .normalClosure, reason: nil)
         receiveTask?.cancel()
         resultsQueue.finish()
         resumeFinalizeWaiter()
     }
 
-    private func sendAudio() async {
+    private func sendAudio(over socket: URLSessionWebSocketTask) async {
         for await chunk in audio {
             do {
                 try await socket.send(.data(chunk))
@@ -91,13 +102,13 @@ public actor DeepgramStream {
 
     private func sendText(_ text: String) async {
         do {
-            try await socket.send(.string(text))
+            try await socket?.send(.string(text))
         } catch {
             fail(error)
         }
     }
 
-    private func receiveResults() async {
+    private func receiveResults(from socket: URLSessionWebSocketTask) async {
         while !Task.isCancelled {
             do {
                 handle(try await socket.receive())
@@ -144,7 +155,7 @@ public actor DeepgramStream {
     private func fail(_ error: any Error) {
         // the pending receive always errors once we close the socket ourselves; that's not a failure
         guard failure == nil, !isClosed else { return }
-        let status = (socket.response as? HTTPURLResponse)?.statusCode
+        let status = (socket?.response as? HTTPURLResponse)?.statusCode
         failure = status == Self.unauthorizedStatus ? .invalidDeepgramKey : .connectionFailed
         logger.error(
             "deepgram connection failed (status \(status ?? 0)): \(error.localizedDescription, privacy: .public)"

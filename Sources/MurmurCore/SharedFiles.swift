@@ -47,8 +47,16 @@ struct SharedConfig: Decodable, Sendable {
         let finalizeTimeoutSeconds: Double
     }
 
+    struct Screen: Decodable, Sendable {
+        let maxCharacters: Int
+        let maxKeyterms: Int
+        let maxElements: Int
+        let readTimeoutSeconds: Double
+    }
+
     let cleanup: Cleanup
     let deepgram: Deepgram
+    let screen: Screen
 }
 
 /// `shared/cleanup-prompt.json`: the building blocks of the cleanup system prompt.
@@ -70,5 +78,6 @@ struct SharedCleanupPrompt: Decodable, Sendable {
     let fixes: Fixes
     let styles: Styles
     let boundaries: String
+    let screen: String
     let output: String
 }

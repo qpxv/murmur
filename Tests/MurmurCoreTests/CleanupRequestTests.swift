@@ -8,13 +8,20 @@ struct CleanupRequestTests {
             transcript: "open clock code",
             previous: "earlier words",
             next: "later words",
-            vocabulary: ["Claude Code", " ", "cmux"],
-            appName: "Ghostty"
+            context: CleanupContext(
+                vocabulary: ["Claude Code", " ", "cmux"],
+                appName: "Ghostty",
+                screen: "Mia\nsee blogr.ai"
+            )
         )
         #expect(
             message == """
                 <vocabulary>Claude Code, cmux</vocabulary>
                 <app>Ghostty</app>
+                <screen>
+                Mia
+                see blogr.ai
+                </screen>
                 <previous>earlier words</previous>
                 <transcript>
                 open clock code
@@ -29,8 +36,7 @@ struct CleanupRequestTests {
             transcript: "hi",
             previous: "",
             next: "",
-            vocabulary: [],
-            appName: nil
+            context: CleanupContext(vocabulary: [], appName: nil, screen: "")
         )
         #expect(message == "<transcript>\nhi\n</transcript>")
     }

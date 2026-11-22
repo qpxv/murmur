@@ -20,5 +20,11 @@
       "german": "de"
     },
     "finalizeTimeoutSeconds": 3
+  },
+  "screen": {
+    "maxCharacters": 3000,
+    "maxKeyterms": 30,
+    "maxElements": 1500,
+    "readTimeoutSeconds": 0.25
   }
 }
