@@ -54,6 +54,15 @@ owns architecture, quality and maintenance.
   `Settings.cleanup` (`CleanupOptions`): three fix toggles + style casual/normal/formal; the
   system prompt is built from it by `CleanupPrompt.system(for:)`. Nothing to do (all fixes off,
   normal style) means no Claude call at all.
+- **Screen context** (`Settings.isScreenContextEnabled`, on by default, toggle in Vocabulary): on
+  key down the front window's text is read through accessibility (`ScreenReader`; Windows: UI
+  Automation), passwords skipped, capped by `screen.maxElements` and `screen.readTimeoutSeconds`.
+  The mic starts at once; Deepgram connects only after the read (its audio waits in the stream), so
+  `ScreenContext` names (domains, mixed case, acronyms, capitalized words: on the Mac those the
+  system dictionary doesn't know, on Windows English mid-sentence only) join the vocabulary as key
+  terms. The text's end (capped) goes to Claude as `<screen>` with each chunk. Never logged (counts
+  and ms only), never in history. Chromium apps show page text only after `TextInserter` switched
+  their accessibility on (the first paste there).
 - **Mic capture: an input-only HAL unit (`AudioCapture`), not `AVAudioEngine`.** The engine opens
   the system default input first and binds the default output; with AirPods connected (macOS
   makes them the default input) that flipped them into headset mode and broke music playback,
