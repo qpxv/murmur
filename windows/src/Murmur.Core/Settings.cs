@@ -40,6 +40,9 @@ public sealed record Settings
     /// <summary>The language the user speaks.</summary>
     public DictationLanguage Language { get; init; } = DictationLanguage.English;
 
+    /// <summary>Read the front window's text at the start of a dictation, so names on screen come out right.</summary>
+    public bool IsScreenContextEnabled { get; init; } = true;
+
     public static Settings Defaults { get; } = new();
 
     /// <summary>
@@ -66,7 +69,8 @@ public sealed record Settings
         && IsHistoryEnabled == other.IsHistoryEnabled
         && SyncDeviceName == other.SyncDeviceName
         && Hotkey == other.Hotkey
-        && Language == other.Language;
+        && Language == other.Language
+        && IsScreenContextEnabled == other.IsScreenContextEnabled;
 
     public override int GetHashCode() => HashCode.Combine(IsMicBoostEnabled, InputDeviceId, OverlayPosition, Cleanup);
 }

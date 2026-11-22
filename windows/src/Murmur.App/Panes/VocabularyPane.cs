@@ -58,6 +58,14 @@ public static class VocabularyPane
                 header: null,
                 footer: "Names, products and jargon that get misheard, e.g. \"Claude Code\".",
                 Ui.Horizontal(Theme.Window.RowSpacing, draft, Ui.Button("Add", Add, isAccent: true))),
+            Ui.Section(
+                header: null,
+                footer: "When you start dictating, the text of the front window (a chat, a web page) is read, so names on it "
+                    + "are spelled right. It's sent to Deepgram and Claude with that dictation, never saved.",
+                Ui.Toggle(
+                    "Use names from the screen",
+                    settings.Current.IsScreenContextEnabled,
+                    isOn => settings.Update(current => current with { IsScreenContextEnabled = isOn }))),
             Ui.Stack(Theme.Window.RowSpacing / 2, count, Ui.Section(header: null, footer: null, terms)));
     }
 }

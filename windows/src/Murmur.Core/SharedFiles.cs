@@ -33,7 +33,7 @@ public static class SharedFiles
 }
 
 /// <summary><c>shared/config.json</c>.</summary>
-public sealed record SharedConfig(SharedConfig.CleanupConfig Cleanup, SharedConfig.DeepgramConfig Deepgram)
+public sealed record SharedConfig(SharedConfig.CleanupConfig Cleanup, SharedConfig.DeepgramConfig Deepgram, SharedConfig.ScreenConfig Screen)
 {
     public sealed record CleanupConfig(
         Uri MessagesUrl,
@@ -52,6 +52,8 @@ public sealed record SharedConfig(SharedConfig.CleanupConfig Cleanup, SharedConf
 
     /// <summary>Deepgram's code for each <see cref="DictationLanguage"/>.</summary>
     public sealed record DeepgramLanguages(string English, string German);
+
+    public sealed record ScreenConfig(int MaxCharacters, int MaxKeyterms, int MaxElements, double ReadTimeoutSeconds);
 }
 
 /// <summary><c>shared/cleanup-prompt.json</c>: the building blocks of the cleanup system prompt.</summary>
@@ -61,6 +63,7 @@ public sealed record SharedCleanupPrompt(
     SharedCleanupPrompt.FixTexts Fixes,
     SharedCleanupPrompt.StyleTexts Styles,
     string Boundaries,
+    string Screen,
     string Output)
 {
     public sealed record FixTexts(string MisheardWords, string Punctuation, string Stutters);

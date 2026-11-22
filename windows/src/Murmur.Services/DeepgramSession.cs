@@ -10,8 +10,8 @@ namespace Murmur.Services;
 
 /// <summary>
 /// One live Deepgram transcription (a WebSocket) for one dictation. Audio is queued with
-/// <see cref="Send"/> (safe from the capture thread) and streamed in order once the socket is
-/// open. Finalized segments come out of <see cref="Results"/> as they arrive. <see cref="FinishAsync"/>
+/// <see cref="Send"/> (safe from the capture thread, also before <see cref="Start"/>) and streamed
+/// in order once the socket is open. Finalized segments come out of <see cref="Results"/> as they arrive. <see cref="FinishAsync"/>
 /// flushes the last words; <see cref="Results"/> completes right after.
 /// </summary>
 public sealed class DeepgramSession : IDisposable
@@ -20,7 +20,7 @@ public sealed class DeepgramSession : IDisposable
     private const int ReceiveBufferBytes = 16 * 1024;
 
     private readonly ClientWebSocket _socket = new();
-    private readonly Uri _uri;
+    private readonly DictationLanguage _language;
     private readonly Channel<byte[]> _audio = Channel.CreateUnbounded<byte[]>(new UnboundedChannelOptions { SingleReader = true });
     private readonly Channel<DeepgramMessages.FinalResult> _results =
         Channel.CreateUnbounded<DeepgramMessages.FinalResult>(new UnboundedChannelOptions { SingleWriter = true });
@@ -32,9 +32,9 @@ public sealed class DeepgramSession : IDisposable
     private volatile bool _isClosed;
     private DictationError? _failure;
 
-    public DeepgramSession(string apiKey, IReadOnlyList<string> vocabulary, DictationLanguage language)
+    public DeepgramSession(string apiKey, DictationLanguage language)
     {
-        _uri = DeepgramMessages.ListenUri(vocabulary, language);
+        _language = language;
         _socket.Options.SetRequestHeader("Authorization", $"Token {apiKey}");
         // keeps the http status of a refused upgrade, so a wrong key can be told apart from no network
         _socket.Options.CollectHttpResponseDetails = true;
@@ -43,10 +43,18 @@ public sealed class DeepgramSession : IDisposable
     /// <summary>Every finalized segment, in order. Completes when the stream finishes or is cancelled.</summary>
     public ChannelReader<DeepgramMessages.FinalResult> Results => _results.Reader;
 
-    /// <summary>Connects in the background; audio sent meanwhile waits in the queue.</summary>
-    public void Start()
+    /// <summary>
+    /// Connects in the background with every one of <paramref name="keyterms"/> boosted (the key terms,
+    /// the screen's names, are only known by then); audio sent meanwhile waits in the queue.
+    /// Does nothing once cancelled.
+    /// </summary>
+    public void Start(IReadOnlyList<string> keyterms)
     {
-        var connecting = ConnectAsync();
+        if (_isClosed)
+        {
+            return;
+        }
+        var connecting = ConnectAsync(DeepgramMessages.ListenUri(keyterms, _language));
         _sending = SendAudioAsync(connecting);
         _receiving = ReceiveAsync(connecting);
     }
@@ -88,14 +96,14 @@ public sealed class DeepgramSession : IDisposable
         _closing.Dispose();
     }
 
-    private async Task<bool> ConnectAsync()
+    private async Task<bool> ConnectAsync(Uri uri)
     {
         var started = Stopwatch.GetTimestamp();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token);
         timeout.CancelAfter(AppConstants.Deepgram.ConnectTimeout);
         try
         {
-            await _socket.ConnectAsync(_uri, timeout.Token);
+            await _socket.ConnectAsync(uri, timeout.Token);
             Log.Info(Category, $"connected in {Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
             return true;
         }

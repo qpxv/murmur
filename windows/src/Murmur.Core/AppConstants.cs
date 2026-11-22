@@ -68,6 +68,19 @@ public static class AppConstants
         public static readonly TimeSpan FinishTimeout = TimeSpan.FromSeconds(Shared.FinishTimeoutSeconds);
     }
 
+    public static class Screen
+    {
+        private static readonly SharedConfig.ScreenConfig Shared = SharedFiles.Config.Screen;
+        /// <summary>Screen text sent to Claude is cut off after this many characters.</summary>
+        public static readonly int MaxCharacters = Shared.MaxCharacters;
+        /// <summary>At most this many names from the screen are boosted in Deepgram.</summary>
+        public static readonly int MaxKeyterms = Shared.MaxKeyterms;
+        /// <summary>UI Automation elements visited per read: a huge page stops here.</summary>
+        public static readonly int MaxElements = Shared.MaxElements;
+        /// <summary>The read gives up after this long, so Deepgram never waits on a slow app.</summary>
+        public static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(Shared.ReadTimeoutSeconds);
+    }
+
     public static class Sync
     {
         /// <summary>Holds one row per dictation from every device: numbers only, never text.</summary>

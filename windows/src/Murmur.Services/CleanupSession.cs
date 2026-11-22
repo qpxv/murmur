@@ -12,8 +12,6 @@ namespace Murmur.Services;
 public sealed class CleanupSession : IDisposable
 {
     private readonly ClaudeCleaner? _cleaner;
-    private readonly IReadOnlyList<string> _vocabulary;
-    private readonly string? _appName;
     private readonly Lock _gate = new();
     private readonly Chunker _chunker = new();
     private readonly TranscriptAssembler _assembler = new();
@@ -21,6 +19,8 @@ public sealed class CleanupSession : IDisposable
     private readonly CancellationTokenSource _cancellation = new();
     // closed, but not sent yet: waiting for the words that follow it
     private WaitingChunk? _waiting;
+    // the screen is filled in once read, before deepgram connects, so before the first chunk
+    private CleanupContext _context;
 
     /// <param name="cleaner"><c>null</c> when cleanup is off or no Claude key is set: chunks then stay raw.</param>
     /// <param name="vocabulary">Terms Claude must spell exactly like this.</param>
@@ -28,8 +28,16 @@ public sealed class CleanupSession : IDisposable
     public CleanupSession(ClaudeCleaner? cleaner, IReadOnlyList<string> vocabulary, string? appName)
     {
         _cleaner = cleaner;
-        _vocabulary = vocabulary;
-        _appName = appName;
+        _context = new CleanupContext(vocabulary, appName, Screen: "");
+    }
+
+    /// <summary>The screen text Claude gets as context with every chunk.</summary>
+    public void UseScreen(string text)
+    {
+        lock (_gate)
+        {
+            _context = _context with { Screen = text };
+        }
     }
 
     public void Add(DeepgramMessages.FinalResult result)
@@ -96,8 +104,7 @@ public sealed class CleanupSession : IDisposable
             chunk.Raw,
             chunk.Previous,
             Chunker.FirstWords(followedBy, AppConstants.Cleanup.ContextWords),
-            _vocabulary,
-            _appName);
+            _context);
         var token = _cancellation.Token;
         _requests.Add(Task.Run(
             async () =>

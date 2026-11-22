@@ -175,7 +175,7 @@ public sealed class DictationController : IDisposable
         _errorReset?.Stop();
         var settings = _settings.Current;
 #pragma warning disable CA2000 // owned by the ActiveDictation below, disposed when it's delivered or cancelled
-        var deepgram = new DeepgramSession(apiKey, settings.Vocabulary, settings.Language);
+        var deepgram = new DeepgramSession(apiKey, settings.Language);
         var session = new CleanupSession(Cleaner(settings), settings.Vocabulary, TextInserter.ForegroundAppName());
 #pragma warning restore CA2000
         if (settings.IsMicBoostEnabled)
@@ -201,13 +201,23 @@ public sealed class DictationController : IDisposable
             session.Dispose();
             throw;
         }
-#pragma warning disable CA2025 // both are disposed only after the forwarding task has finished (DeliverAsync, DisposeWhenDoneAsync)
-        deepgram.Start();
+#pragma warning disable CA2025 // both are disposed only after the setup and forwarding tasks have finished (DeliverAsync, DisposeWhenDoneAsync)
+        var setup = ConnectAsync(deepgram, session, settings);
         var forwarding = ForwardAsync(deepgram, session);
 #pragma warning restore CA2025
-        _active = new ActiveDictation(deepgram, session, forwarding, Stopwatch.GetTimestamp());
+        _active = new ActiveDictation(deepgram, session, setup, forwarding, Stopwatch.GetTimestamp());
         Array.Clear(_levels);
         SetState(State.Applying(HotkeyAction.Start));
+    }
+
+    // the mic is already running: its audio waits in the session while the screen is read
+    private static async Task ConnectAsync(DeepgramSession deepgram, CleanupSession session, Settings settings)
+    {
+        var screen = settings.IsScreenContextEnabled
+            ? await ScreenReader.ContextAsync(settings.Vocabulary, settings.Language)
+            : ScreenContext.Empty;
+        session.UseScreen(screen.Text);
+        deepgram.Start([.. settings.Vocabulary, .. screen.Terms]);
     }
 
     // moves deepgram's segments into the cleanup session; ends when the stream ends
@@ -266,6 +276,8 @@ public sealed class DictationController : IDisposable
         {
             // the last word is still on its way (bluetooth delay, audio buffers): keep the mic open a moment
             await Task.Delay(AppConstants.Audio.StopTail);
+            // a very short dictation can stop before deepgram has even connected
+            await dictation.Setup;
             StopCapture();
             Log.Info(Category, $"recording stopped after {speakingSeconds:F1} s: {_capturedBlocks} audio blocks, {_clippedBlocks} clipped");
             await dictation.Deepgram.FinishAsync();
@@ -327,6 +339,7 @@ public sealed class DictationController : IDisposable
     // the socket and session go once forwarding has seen the stream end
     private static async Task DisposeWhenDoneAsync(ActiveDictation dictation)
     {
+        await dictation.Setup;
         await dictation.Forwarding;
         dictation.Deepgram.Dispose();
         dictation.Session.Dispose();
@@ -396,7 +409,8 @@ public sealed class DictationController : IDisposable
     }
 
     /// <summary>The pieces of the one dictation in progress, created and torn down together.</summary>
-    private sealed record ActiveDictation(DeepgramSession Deepgram, CleanupSession Session, Task Forwarding, long StartedAt);
+    // setup reads the screen, then connects deepgram
+    private sealed record ActiveDictation(DeepgramSession Deepgram, CleanupSession Session, Task Setup, Task Forwarding, long StartedAt);
 
     private sealed record CachedCleaner(string ApiKey, CleanupOptions Options, ClaudeCleaner Cleaner);
 }

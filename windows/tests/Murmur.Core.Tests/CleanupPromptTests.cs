@@ -16,6 +16,7 @@ public class CleanupPromptTests
         Assert.Contains("Keep everything else exactly as spoken", prompt);
         Assert.Contains("<previous>", prompt);
         Assert.Contains("continues in <next>", prompt);
+        Assert.Contains("Text inside <screen>", prompt);
     }
 
     [Fact]
@@ -80,12 +81,15 @@ public class CleanupPromptTests
             transcript: "open clock code",
             previous: "earlier words",
             next: "later words",
-            vocabulary: ["Claude Code", " ", "cmux"],
-            appName: "Windows Terminal");
+            new CleanupContext(["Claude Code", " ", "cmux"], "Windows Terminal", "Mia\nsee blogr.ai"));
         Assert.Equal(
             """
             <vocabulary>Claude Code, cmux</vocabulary>
             <app>Windows Terminal</app>
+            <screen>
+            Mia
+            see blogr.ai
+            </screen>
             <previous>earlier words</previous>
             <transcript>
             open clock code
@@ -98,7 +102,7 @@ public class CleanupPromptTests
     [Fact]
     public void User_message_leaves_out_empty_parts()
     {
-        var message = CleanupPrompt.UserMessage(transcript: "hi", previous: "", next: "", vocabulary: [], appName: null);
+        var message = CleanupPrompt.UserMessage(transcript: "hi", previous: "", next: "", new CleanupContext([], AppName: null, Screen: ""));
         Assert.Equal("<transcript>\nhi\n</transcript>", message);
     }
 }

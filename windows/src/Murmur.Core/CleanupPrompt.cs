@@ -19,22 +19,19 @@ public static class CleanupPrompt
         ];
         var chosen = fixes.OfType<string>().ToList();
         var changes = chosen.Count == 0 ? "" : Texts.FixesHeader + "\n" + string.Join("\n", chosen);
-        string[] parts = [Texts.Intro, changes, Style(options.Style), Texts.Boundaries, Texts.Output];
+        string[] parts = [Texts.Intro, changes, Style(options.Style), Texts.Boundaries, Texts.Screen, Texts.Output];
         return string.Join("\n\n", parts.Where(part => part.Length > 0));
     }
 
-    public static string UserMessage(
-        string transcript,
-        string previous,
-        string next,
-        IReadOnlyList<string> vocabulary,
-        string? appName)
+    public static string UserMessage(string transcript, string previous, string next, CleanupContext context)
     {
-        var terms = vocabulary.Where(term => !string.IsNullOrWhiteSpace(term)).ToList();
+        ArgumentNullException.ThrowIfNull(context);
+        var terms = context.Vocabulary.Where(term => !string.IsNullOrWhiteSpace(term)).ToList();
         string?[] lines =
         [
             terms.Count == 0 ? null : $"<vocabulary>{string.Join(", ", terms)}</vocabulary>",
-            appName is null ? null : $"<app>{appName}</app>",
+            context.AppName is null ? null : $"<app>{context.AppName}</app>",
+            context.Screen.Length == 0 ? null : $"<screen>\n{context.Screen}\n</screen>",
             previous.Length == 0 ? null : $"<previous>{previous}</previous>",
             $"<transcript>\n{transcript}\n</transcript>",
             next.Length == 0 ? null : $"<next>{next}</next>",
